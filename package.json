@@ -1,0 +1,34 @@
+{
+  "name": "precision-fix",
+  "version": "1.0.0",
+  "description": "Precision Fix - otimizacoes de Windows para GTA/FiveM",
+  "main": "main.js",
+  "author": "buck",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.buck.precisionfix",
+    "productName": "VN Boost",
+    "directories": { "output": "release" },
+    "files": ["main.js", "preload.js", "lib/**/*", "src/**/*"],
+    "extraResources": [
+      { "from": "resources", "to": ".", "filter": ["**/*"] }
+    ],
+    "win": {
+      "target": [ { "target": "portable" }, { "target": "nsis" } ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "perMachine": true,
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}

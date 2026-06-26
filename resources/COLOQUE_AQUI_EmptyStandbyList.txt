@@ -1,0 +1,11 @@
+Coloque o arquivo EmptyStandbyList.exe NESTA pasta (resources/).
+
+Onde baixar (autor original, wj32):
+  https://wj32.org/wp/wp-content/uploads/2009/10/EmptyStandbyList.exe
+
+Ou pegue dentro do pacote do ISLC (Wagnardsoft):
+  https://www.wagnardsoft.com  -> "Intelligent Standby List Cleaner ISLC"
+  (o EmptyStandbyList.exe vem junto)
+
+Sem esse arquivo, o tweak "ISLC" ainda aplica o DisablePagingExecutive,
+mas NAO consegue limpar a standby list em tempo real.

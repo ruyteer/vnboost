@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VN Boost</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Titlebar -->
+  <div class="titlebar">
+    <div class="traffic">
+      <button id="tlClose" class="dot dot-close" title="Fechar"></button>
+      <button id="tlMin" class="dot dot-min" title="Minimizar"></button>
+      <button id="tlMax" class="dot dot-max" title="Maximizar"></button>
+    </div>
+    <div class="titlebar-id">VN BOOST <span>v1.0</span></div>
+    <div class="titlebar-spacer"></div>
+  </div>
+
+  <!-- TELA DE BLOQUEIO (licenca) -->
+  <div id="lockScreen" class="lock">
+    <div class="lock-box">
+      <img class="lock-logo" src="assets/logo-text.png" alt="VN BOOST"
+           onerror="this.style.display='none'" />
+      <h2>Ativar licença</h2>
+      <p class="lock-sub">Cole sua license key para liberar o painel. A chave fica vinculada a este computador.</p>
+      <input id="lockKey" class="lock-input" type="text" placeholder="VN-XXXX-XXXX-XXXX-XXXX" />
+      <button id="lockActivate" class="btn btn-primary lock-btn">ATIVAR</button>
+      <p id="lockMsg" class="lock-msg"></p>
+      <div class="lock-hwid">
+        <span>Seu HWID</span>
+        <code id="lockHwid">...</code>
+        <button id="lockCopyHwid" class="btn-mini">copiar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="app">
+    <!-- NAVBAR / SIDEBAR -->
+    <aside class="sidebar">
+      <div class="brand">
+        <img id="navLogo" class="nav-logo" src="assets/logo-text.png" alt="VN BOOST"
+             onerror="this.style.display='none';document.getElementById('navLogoFallback').style.display='block';" />
+        <div id="navLogoFallback" class="nav-logo-fallback">VN<span>BOOST</span></div>
+      </div>
+      <nav class="nav">
+        <button class="nav-item active" data-screen="dashboard"><i data-lucide="layout-dashboard"></i> Dashboard</button>
+        <button class="nav-item" data-screen="precision"><i data-lucide="crosshair"></i> Precision</button>
+        <button class="nav-item" data-screen="windows"><i data-lucide="monitor"></i> Windows</button>
+        <button class="nav-item" data-screen="jogos"><i data-lucide="gamepad-2"></i> Jogos</button>
+        <button class="nav-item" data-screen="system"><i data-lucide="wrench"></i> Sistema</button>
+        <button class="nav-item" data-screen="notifs"><i data-lucide="bell"></i> Notificações <span id="notifBadge" class="badge" hidden>0</span></button>
+        <div class="nav-sep"></div>
+        <button class="nav-item" data-screen="config"><i data-lucide="settings"></i> Configurações</button>
+      </nav>
+    </aside>
+
+    <!-- CONTENT -->
+    <div class="content">
+      <div class="screens">
+        <!-- DASHBOARD -->
+        <section class="screen active" id="screen-dashboard">
+          <h2 class="screen-title">Dashboard</h2>
+          <div class="metrics">
+            <div class="metric">
+              <div class="metric-top"><span>CPU</span><span id="cpuPct" class="metric-val">--%</span></div>
+              <div class="bar"><div id="cpuBar" class="bar-fill"></div></div>
+              <div id="cpuModel" class="metric-sub">--</div>
+            </div>
+            <div class="metric">
+              <div class="metric-top"><span>Memória RAM</span><span id="memPct" class="metric-val">--%</span></div>
+              <div class="bar"><div id="memBar" class="bar-fill"></div></div>
+              <div id="memSub" class="metric-sub">-- / -- GB</div>
+            </div>
+            <div class="metric small">
+              <div class="metric-sub">Núcleos</div>
+              <div id="cores" class="metric-big">--</div>
+            </div>
+            <div class="metric small">
+              <div class="metric-sub">Ligado há</div>
+              <div id="uptime" class="metric-big">--</div>
+            </div>
+            <div class="metric small">
+              <div class="metric-sub">Sistema</div>
+              <div id="osinfo" class="metric-big2">--</div>
+            </div>
+            <div class="metric small">
+              <div class="metric-sub">Máquina</div>
+              <div id="host" class="metric-big2">--</div>
+            </div>
+          </div>
+
+          <h3 class="section-h">Atalhos</h3>
+          <div class="shortcuts">
+            <button class="shortcut" data-go="precision"><b>Precision</b><span>Mouse, teclado, timers</span></button>
+            <button class="shortcut" data-go="windows"><b>Windows</b><span>15 otimizações</span></button>
+            <button class="shortcut" data-go="jogos"><b>Jogos</b><span>Prioridade por jogo</span></button>
+            <button class="shortcut" data-go="system"><b>Sistema</b><span>Ações rápidas</span></button>
+          </div>
+
+          <h3 class="section-h">Performance</h3>
+          <div class="shortcuts perf">
+            <button class="perf-btn" data-perf="precision"><i data-lucide="zap"></i> Ativar Precision Fix</button>
+            <button class="perf-btn" data-perf="ram"><i data-lucide="eraser"></i> Limpar Memória RAM</button>
+            <button class="perf-btn" data-perf="cache"><i data-lucide="trash-2"></i> Limpar Cache do Windows</button>
+            <button class="perf-btn" data-perf="ping"><i data-lucide="wifi"></i> Melhorar Ping</button>
+          </div>
+        </section>
+
+        <!-- PRECISION -->
+        <section class="screen" id="screen-precision">
+          <div class="toolbar">
+            <h2 class="screen-title">Precision</h2>
+            <div class="toolbar-actions">
+              <button class="btn btn-primary" data-applyall="precision">APLICAR TUDO</button>
+              <button class="btn btn-ghost" data-revertall="precision">REVERTER TUDO</button>
+            </div>
+          </div>
+          <div class="grid"></div>
+        </section>
+
+        <!-- WINDOWS -->
+        <section class="screen" id="screen-windows">
+          <div class="toolbar">
+            <h2 class="screen-title">Windows</h2>
+            <div class="toolbar-actions">
+              <button class="btn btn-primary" data-applyall="windows">APLICAR TUDO</button>
+              <button class="btn btn-ghost" data-revertall="windows">REVERTER TUDO</button>
+            </div>
+          </div>
+          <div class="grid"></div>
+        </section>
+
+        <!-- JOGOS -->
+        <section class="screen" id="screen-jogos">
+          <div class="toolbar">
+            <h2 class="screen-title">Jogos</h2>
+            <input id="gameSearch" class="search" type="text" placeholder="Buscar jogo..." />
+            <span class="toolbar-info" id="gameCount"></span>
+          </div>
+          <div class="grid grid-games" id="gamesList"></div>
+        </section>
+
+        <!-- SISTEMA -->
+        <section class="screen" id="screen-system">
+          <div class="toolbar">
+            <h2 class="screen-title">Sistema</h2>
+            <span class="toolbar-info">Ações rápidas — executam na hora.</span>
+          </div>
+          <div class="grid"></div>
+        </section>
+
+        <!-- NOTIFICAÇÕES -->
+        <section class="screen" id="screen-notifs">
+          <div class="toolbar">
+            <h2 class="screen-title">Notificações</h2>
+            <button id="clearNotifs" class="btn btn-ghost">LIMPAR TUDO</button>
+          </div>
+          <div id="notifsList" class="notifs"></div>
+        </section>
+
+        <!-- CONFIGURAÇÕES -->
+        <section class="screen" id="screen-config">
+          <h2 class="screen-title">Configurações</h2>
+          <div class="settings">
+            <div class="lic-card" id="licCard">
+              <div class="lic-head">
+                <b>Licença</b>
+                <span id="licStatus" class="tag">—</span>
+              </div>
+              <div class="lic-row"><span>Chave</span><code id="licKey">—</code></div>
+              <div class="lic-row"><span>Expira</span><span id="licExpires">—</span></div>
+              <div class="lic-row"><span>HWID</span><code id="licHwid" class="lic-hwid">—</code>
+                <button id="licCopyHwid" class="btn-mini">copiar</button></div>
+              <div class="lic-actions">
+                <button id="licDeactivate" class="btn btn-ghost">DESATIVAR / TROCAR CHAVE</button>
+              </div>
+            </div>
+            <label class="setting">
+              <div>
+                <b>Mostrar console</b>
+                <span>Exibe o log técnico na parte de baixo da janela.</span>
+              </div>
+              <input type="checkbox" id="setConsole" class="switch" />
+            </label>
+            <label class="setting">
+              <div>
+                <b>Notificar quando precisar reiniciar</b>
+                <span>Cria uma notificação quando um tweak exige reboot.</span>
+              </div>
+              <input type="checkbox" id="setRebootNotif" class="switch" checked />
+            </label>
+          </div>
+        </section>
+      </div>
+
+      <!-- CONSOLE (opcional) -->
+      <section class="console" id="console" hidden>
+        <div class="console-head">
+          <span class="console-title"><i class="pulse"></i> CONSOLE</span>
+          <button id="clearLog" class="btn-mini">limpar</button>
+        </div>
+        <pre id="log"></pre>
+      </section>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="renderer.js"></script>
+</body>
+</html>
