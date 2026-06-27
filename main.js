@@ -8,7 +8,8 @@ const backup = require("./lib/backup");
 const license = require("./lib/license");
 const { getHwid } = require("./lib/hwid");
 const { autoUpdater } = require("electron-updater");
-const updLog = require("electron-log");
+let updLog = null;
+try { updLog = require("electron-log"); } catch (e) { /* opcional */ }
 
 let win = null;
 let lastCatalog = null;
@@ -68,7 +69,8 @@ app.on("window-all-closed", () => { if (process.platform !== "darwin") app.quit(
 // ----- Auto-update -----
 function sendUpdate(p) { if (win && !win.isDestroyed()) win.webContents.send("update-status", p); }
 function setupUpdater() {
-  autoUpdater.logger = updLog; updLog.transports.file.level = "info"; autoUpdater.autoDownload = true;
+  if (updLog) { autoUpdater.logger = updLog; updLog.transports.file.level = "info"; }
+  autoUpdater.autoDownload = true;
   autoUpdater.on("checking-for-update", () => sendUpdate({ state: "checking" }));
   autoUpdater.on("update-available", (i) => sendUpdate({ state: "available", version: i && i.version }));
   autoUpdater.on("update-not-available", () => sendUpdate({ state: "uptodate" }));
