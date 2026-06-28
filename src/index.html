@@ -46,7 +46,7 @@
       </div>
       <nav class="nav">
         <button class="nav-item active" data-screen="dashboard"><i data-lucide="layout-dashboard"></i> Dashboard</button>
-        <button class="nav-item" data-screen="precision"><i data-lucide="crosshair"></i> Precision</button>
+        <button class="nav-item" data-screen="precision"><i data-lucide="crosshair"></i> PrecisionFix</button>
         <button class="nav-item" data-screen="windows"><i data-lucide="monitor"></i> Windows</button>
         <button class="nav-item" data-screen="jogos"><i data-lucide="gamepad-2"></i> Jogos</button>
         <button class="nav-item" data-screen="fivem"><i data-lucide="rocket"></i> FiveM</button>
@@ -94,7 +94,7 @@
 
           <h3 class="section-h">Atalhos</h3>
           <div class="shortcuts">
-            <button class="shortcut" data-go="precision"><b>Precision</b><span>Mouse, teclado, timers</span></button>
+            <button class="shortcut" data-go="precision"><b>PrecisionFix</b><span>Mouse, teclado, timers</span></button>
             <button class="shortcut" data-go="windows"><b>Windows</b><span>15 otimizações</span></button>
             <button class="shortcut" data-go="jogos"><b>Jogos</b><span>Prioridade por jogo</span></button>
             <button class="shortcut" data-go="system"><b>Sistema</b><span>Ações rápidas</span></button>
@@ -112,7 +112,7 @@
         <!-- PRECISION -->
         <section class="screen" id="screen-precision">
           <div class="toolbar">
-            <h2 class="screen-title">Precision</h2>
+            <h2 class="screen-title">PrecisionFix</h2>
             <div class="toolbar-actions">
               <button class="btn btn-primary" data-applyall="precision">APLICAR TUDO</button>
               <button class="btn btn-ghost" data-revertall="precision">REVERTER TUDO</button>
@@ -130,7 +130,8 @@
               <button class="btn btn-ghost" data-revertall="windows">REVERTER TUDO</button>
             </div>
           </div>
-          <div class="grid"></div>
+          <div class="subtabs" id="winSubtabs"></div>
+          <div id="winPanels"></div>
         </section>
 
         <!-- JOGOS -->

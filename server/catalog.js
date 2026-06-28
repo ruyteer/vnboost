@@ -160,6 +160,7 @@ const TWEAKS = [
     cmds: [
       "powercfg -duplicatescheme e9a42b02-d5df-448d-aa00-03f14749eb61",
       "powercfg /setacvalueindex SCHEME_CURRENT SUB_PROCESSOR IdleDisable 0",
+      "powercfg /setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PROCTHROTTLEMAX 100",
       "powercfg /setactive SCHEME_CURRENT",
     ],
     revert: ["powercfg /setactive 381b4222-f694-41f0-9685-ff5bb260df2e"],
@@ -283,6 +284,66 @@ const TWEAKS = [
       { path: GAMES_TASK, name: "Scheduling Category", type: "REG_SZ", data: "High" },
     ] },
 
+  { id: "mpo", cat: "windows", name: "Desativar MPO",
+    desc: "Desativa o Multiplane Overlay (resolve flicker, tearing e stutter em alguns PCs).",
+    reg: [{ path: "HKLM\\SOFTWARE\\Microsoft\\Windows\\Dwm", name: "OverlayTestMode", type: "REG_DWORD", data: "5" }],
+    note: "Se a tela piscar/ficar estranha, reverta." },
+
+  { id: "ulps", cat: "windows", name: "Desativar ULPS (AMD)",
+    desc: "Desativa o ULPS da AMD (evita quedas de clock e stutter). So afeta GPU AMD.",
+    reg: [
+      { path: "HKLM\\SYSTEM\\CurrentControlSet\\Services\\amdkmdag", name: "EnableUlps", type: "REG_DWORD", data: "0" },
+      { path: "HKLM\\SYSTEM\\CurrentControlSet\\Services\\amdkmdag", name: "EnableUlps_NA", type: "REG_DWORD", data: "0" },
+    ],
+    note: "So AMD. Precisa reiniciar." },
+
+  { id: "shadercache", cat: "windows", name: "Shader Cache Sempre Ativo (AMD)",
+    desc: "Mantem o shader cache sempre ligado (menos stutter de compilacao). So GPU AMD.",
+    reg: [{ path: "HKLM\\SYSTEM\\CurrentControlSet\\Services\\amdkmdag", name: "ShaderCache", type: "REG_DWORD", data: "2" }],
+    note: "So AMD." },
+
+  { id: "ntfsaccess", cat: "windows", name: "Acelerar Acesso a Arquivos",
+    desc: "Desativa o registro de ultimo acesso do NTFS (abre pastas e arquivos mais rapido).",
+    reg: [{ path: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\FileSystem", name: "NtfsDisableLastAccessUpdate", type: "REG_DWORD", data: "1" }] },
+
+  { id: "netthrottle", cat: "windows", name: "Remover Limitacao de Rede",
+    desc: "Desativa o Network Throttling do Windows (melhora latencia e throughput em jogos).",
+    reg: [{ path: MMCSS, name: "NetworkThrottlingIndex", type: "REG_DWORD", data: "4294967295" }] },
+
+  { id: "tcplatency", cat: "windows", name: "Otimizar TCP (Latencia)",
+    desc: "Ajusta o TCP para menor latencia (ECN e timestamps off, RSS on).",
+    cmds: [
+      "netsh int tcp set global autotuninglevel=normal",
+      "netsh int tcp set global ecncapability=disabled",
+      "netsh int tcp set global timestamps=disabled",
+      "netsh int tcp set global rss=enabled",
+    ],
+    revert: [
+      "netsh int tcp set global ecncapability=enabled",
+      "netsh int tcp set global timestamps=enabled",
+    ] },
+
+  { id: "largesyscache", cat: "windows", name: "Cache de Arquivos na RAM",
+    desc: "Aumenta o cache de arquivos do sistema na memoria (LargeSystemCache).",
+    reg: [{ path: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management", name: "LargeSystemCache", type: "REG_DWORD", data: "1" }],
+    note: "Indicado para PCs com bastante RAM." },
+
+  { id: "svchostsplit", cat: "windows", name: "Agrupar Servicos (svchost)",
+    desc: "Ajusta o limite de split do svchost ao total de RAM do PC (menos processos svchost, menos overhead).",
+    special: "svchostsplit", note: "Precisa reiniciar para valer." },
+
+  { id: "amdoverlay", cat: "windows", name: "Desat. Overlay/Telemetria AMD",
+    desc: "Desliga conteudo web, telemetria e auto-update do AMD Software. So GPU AMD.",
+    reg: [
+      { path: "HKLM\\SOFTWARE\\AMD\\CN", name: "AllowWebContent", type: "REG_DWORD", data: "0" },
+      { path: "HKLM\\SOFTWARE\\AMD\\CN", name: "AutoUpdate", type: "REG_DWORD", data: "0" },
+    ], note: "So AMD." },
+
+  { id: "nvshadowplay", cat: "windows", name: "Desat. NVIDIA ShadowPlay",
+    desc: "Desliga o ShadowPlay/overlay da NVIDIA (menos uso em segundo plano). So GPU NVIDIA.",
+    reg: [{ path: "HKLM\\SOFTWARE\\NVIDIA Corporation\\Global\\ShadowPlay", name: "Allow", type: "REG_DWORD", data: "0" }],
+    note: "So NVIDIA." },
+
   // ---------------- SYSTEM (acoes) ----------------
   { id: "ping", cat: "system", name: "Melhorar Ping/DNS",
     desc: "Limpa o cache DNS e renova o IP (flushdns + release + renew).",
@@ -385,6 +446,19 @@ const GAMES = [
 ];
 
 
+
+// sub-categoria dentro da aba Windows
+const SUBS = {
+  energia: "Desempenho", priocpugpu: "Desempenho", prioforeground: "Desempenho",
+  mpo: "GPU", ulps: "GPU", shadercache: "GPU",
+  netthrottle: "Rede", tcplatency: "Rede",
+  telemetria: "Privacidade", cortana: "Privacidade", gamebar: "Privacidade",
+  werror: "Privacidade", menuiniciar: "Privacidade", appsbg: "Privacidade",
+  efeitos: "Sistema", hibernacao: "Sistema", memcomp: "Sistema",
+  indexacao: "Sistema", prefetch: "Sistema", servicos: "Sistema", ntfsaccess: "Sistema",
+  largesyscache: "Sistema", svchostsplit: "Sistema", amdoverlay: "GPU", nvshadowplay: "GPU",
+};
+
 // "probes": como verificar no PC se o tweak ja esta aplicado (estado real).
 const PROBES = {
   tracking: { type: "reg", path: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl", name: "Win32PrioritySeparation", equals: "38" },
@@ -415,6 +489,11 @@ const PROBES = {
   cortana: { type: "reg", path: "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Search", name: "AllowCortana", equals: "0" },
   prefetch: { type: "reg", path: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\\PrefetchParameters", name: "EnablePrefetcher", equals: "0" },
   priocpugpu: { type: "reg", path: MMCSS, name: "SystemResponsiveness", equals: "0" },
+  mpo: { type: "reg", path: "HKLM\\SOFTWARE\\Microsoft\\Windows\\Dwm", name: "OverlayTestMode", equals: "5" },
+  ulps: { type: "reg", path: "HKLM\\SYSTEM\\CurrentControlSet\\Services\\amdkmdag", name: "EnableUlps", equals: "0" },
+  shadercache: { type: "reg", path: "HKLM\\SYSTEM\\CurrentControlSet\\Services\\amdkmdag", name: "ShaderCache", equals: "2" },
+  ntfsaccess: { type: "reg", path: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\FileSystem", name: "NtfsDisableLastAccessUpdate", equals: "1" },
+  netthrottle: { type: "reg", path: MMCSS, name: "NetworkThrottlingIndex", equals: "4294967295" },
   prioforeground: { type: "reg", path: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl", name: "Win32PrioritySeparation", equals: "38" },
 };
 
@@ -423,7 +502,7 @@ function metaList() {
   return TWEAKS.map((t) => ({
     id: t.id, cat: t.cat, name: t.name, desc: t.desc,
     action: !!t.action, confirm: t.confirm || null, note: t.note || null,
-    probe: PROBES[t.id] || null,
+    probe: PROBES[t.id] || null, sub: SUBS[t.id] || null,
   }));
 }
 function gameNames() { return GAMES.map((g) => ({ name: g.name })); }

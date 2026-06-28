@@ -124,18 +124,42 @@ function makeGameCard(g) {
   return card;
 }
 
+// ---------------- aba Windows (sub-tabs) ----------------
+function buildWindows(winTweaks) {
+  const subtabs = $("#winSubtabs"), panels = $("#winPanels");
+  if (!subtabs || !panels) return;
+  subtabs.innerHTML = ""; panels.innerHTML = "";
+  const order = ["Desempenho", "GPU", "Rede", "Privacidade", "Sistema"];
+  const subs = [...new Set(winTweaks.map((t) => t.sub || "Outros"))].sort((a, b) => order.indexOf(a) - order.indexOf(b));
+  subs.forEach((sub, i) => {
+    const b = document.createElement("button");
+    b.className = "subtab" + (i === 0 ? " active" : ""); b.textContent = sub; b.dataset.wsub = sub;
+    b.addEventListener("click", () => {
+      subtabs.querySelectorAll(".subtab").forEach((x) => x.classList.toggle("active", x === b));
+      panels.querySelectorAll(".subpanel").forEach((pp) => pp.classList.toggle("active", pp.dataset.wsub === sub));
+    });
+    subtabs.appendChild(b);
+    const panel = document.createElement("div");
+    panel.className = "subpanel" + (i === 0 ? " active" : ""); panel.dataset.wsub = sub;
+    const grid = document.createElement("div"); grid.className = "grid";
+    winTweaks.filter((t) => (t.sub || "Outros") === sub).forEach((t) => grid.appendChild(makeCard(t)));
+    panel.appendChild(grid); panels.appendChild(panel);
+  });
+}
+
 // ---------------- catálogo ----------------
 async function loadCatalog() {
-  const gp = $("#screen-precision .grid"), gw = $("#screen-windows .grid"), gs = $("#screen-system .grid"), gl = $("#gamesList");
-  [gp, gw, gs, gl].forEach((g) => g && (g.innerHTML = ""));
+  const gp = $("#screen-precision .grid"), gs = $("#screen-system .grid"), gl = $("#gamesList");
+  [gp, gs, gl].forEach((g) => g && (g.innerHTML = ""));
   const cat = await window.api.catalog();
   if (!cat || !cat.ok) {
     if (cat && cat.offline) notify("Sem conexão com o servidor — recursos indisponíveis.", "warn");
     else showLock(cat && cat.reason);
     return;
   }
-  const grids = { precision: gp, windows: gw, system: gs };
+  const grids = { precision: gp, system: gs };
   cat.tweaks.forEach((t) => grids[t.cat] && grids[t.cat].appendChild(makeCard(t)));
+  buildWindows(cat.tweaks.filter((t) => t.cat === "windows"));
   (cat.games || []).forEach((g) => gl.appendChild(makeGameCard(g)));
   $("#gameCount").textContent = `${(cat.games || []).length} jogos`;
   await refreshStatus();
