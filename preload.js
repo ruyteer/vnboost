@@ -4,6 +4,10 @@ const { contextBridge, ipcRenderer } = require("electron");
 contextBridge.exposeInMainWorld("api", {
   // catalogo + acoes (validados no servidor a cada chamada)
   catalog: () => ipcRenderer.invoke("catalog"),
+  tweakStatus: () => ipcRenderer.invoke("tweak-status"),
+  fivemInfo: () => ipcRenderer.invoke("fivem:info"),
+  fivemClean: () => ipcRenderer.invoke("fivem:clean"),
+  fivemPick: () => ipcRenderer.invoke("fivem:pick"),
   apply: (id) => ipcRenderer.invoke("apply", id),
   revert: (id) => ipcRenderer.invoke("revert", id),
   applyAll: (cat) => ipcRenderer.invoke("apply-all", cat),

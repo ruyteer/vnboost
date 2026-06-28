@@ -5,12 +5,11 @@ const logEl = $("#log");
 function log(text) {
   const line = document.createElement("div");
   line.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
-  logEl.appendChild(line);
-  logEl.scrollTop = logEl.scrollHeight;
+  logEl.appendChild(line); logEl.scrollTop = logEl.scrollHeight;
 }
 window.api.onLog((t) => log(t));
 
-function setBusy(b) { document.querySelectorAll(".btn,.perf-btn").forEach((x) => (x.disabled = b)); }
+function setBusy(b) { document.querySelectorAll(".btn,.perf-btn,.tw-switch,.game-switch").forEach((x) => (x.disabled = b)); }
 async function withBusy(fn) {
   setBusy(true);
   try { await fn(); } catch (e) { log("Erro: " + (e && e.message ? e.message : e)); }
@@ -58,12 +57,26 @@ function go(screen) {
   if (screen === "notifs") { setUnread(0); renderNotifs(); }
 }
 
-// ---------------- resultado de ação (server-gated) ----------------
+// ---------------- resultado de ação ----------------
 function handleResult(res, okMsg) {
   if (res && res.ok) { if (okMsg) notify(okMsg, "ok"); return true; }
   if (res && res.offline) { notify("Sem conexão com o servidor.", "warn"); return false; }
   if (res && res.locked) { notify("Licença inválida/revogada — acesso bloqueado.", "warn"); showLock(res.reason); return false; }
   notify("Falha na operação.", "warn"); return false;
+}
+
+// ---------------- estado (switches) ----------------
+async function refreshStatus() {
+  try {
+    const st = await window.api.tweakStatus();
+    const ts = new Set(st.tweaks || []), gs = new Set(st.games || []);
+    document.querySelectorAll(".tw-switch").forEach((s) => (s.checked = ts.has(s.dataset.id)));
+    document.querySelectorAll(".game-switch").forEach((s) => (s.checked = gs.has(s.dataset.name)));
+    const n = (st.tweaks || []).length;
+    const total = st.total || 0;
+    const pct = total > 0 ? Math.round((n / total) * 100) : 0;
+    const el = $("#activePct"); if (el) el.textContent = pct + "%";
+  } catch (e) {}
 }
 
 // ---------------- cards ----------------
@@ -79,18 +92,18 @@ function makeCard(t) {
       withBusy(async () => handleResult(await window.api.apply(t.id), `Ação executada: ${t.name}`));
     });
   } else {
-    card.innerHTML = `<h3>${t.name}</h3><p>${t.desc}</p>${note}
-      <div class="card-actions">
-        <button class="btn apply">APLICAR</button>
-        <button class="btn revert">REVERTER</button>
-      </div>`;
-    card.querySelector(".apply").addEventListener("click", () =>
-      withBusy(async () => {
-        if (handleResult(await window.api.apply(t.id), `Aplicado: ${t.name}`))
-          if (t.note && /reinici/i.test(t.note) && rebootNotifOn()) notify(`${t.name} exige reiniciar o PC.`, "warn");
-      }));
-    card.querySelector(".revert").addEventListener("click", () =>
-      withBusy(async () => handleResult(await window.api.revert(t.id), `Revertido: ${t.name}`)));
+    card.innerHTML = `
+      <div class="card-top"><h3>${t.name}</h3>
+        <input type="checkbox" class="switch tw-switch" data-id="${t.id}"></div>
+      <p>${t.desc}</p>${note}`;
+    const sw = card.querySelector(".tw-switch");
+    sw.addEventListener("change", () => withBusy(async () => {
+      const on = sw.checked;
+      const res = on ? await window.api.apply(t.id) : await window.api.revert(t.id);
+      const ok = handleResult(res, `${on ? "Aplicado" : "Revertido"}: ${t.name}`);
+      if (!ok) sw.checked = !on;
+      else if (on && t.note && /reinici/i.test(t.note) && rebootNotifOn()) notify(`${t.name} exige reiniciar o PC.`, "warn");
+    }));
   }
   return card;
 }
@@ -98,19 +111,20 @@ function makeGameCard(g) {
   const card = document.createElement("div");
   card.className = "card card-game";
   card.dataset.name = g.name.toLowerCase();
-  card.innerHTML = `<h3>${g.name}</h3>
-    <div class="card-actions">
-      <button class="btn apply">PRIORIZAR</button>
-      <button class="btn revert">REVERTER</button>
-    </div>`;
-  card.querySelector(".apply").addEventListener("click", () =>
-    withBusy(async () => handleResult(await window.api.applyGame(g.name), `Prioridade Alta: ${g.name}`)));
-  card.querySelector(".revert").addEventListener("click", () =>
-    withBusy(async () => handleResult(await window.api.revertGame(g.name), `Prioridade revertida: ${g.name}`)));
+  card.innerHTML = `
+    <div class="card-top"><h3>${g.name}</h3>
+      <input type="checkbox" class="switch game-switch" data-name="${g.name}"></div>`;
+  const sw = card.querySelector(".game-switch");
+  sw.addEventListener("change", () => withBusy(async () => {
+    const on = sw.checked;
+    const res = on ? await window.api.applyGame(g.name) : await window.api.revertGame(g.name);
+    const ok = handleResult(res, `${on ? "Prioridade Alta" : "Prioridade revertida"}: ${g.name}`);
+    if (!ok) sw.checked = !on;
+  }));
   return card;
 }
 
-// ---------------- catálogo (servidor) ----------------
+// ---------------- catálogo ----------------
 async function loadCatalog() {
   const gp = $("#screen-precision .grid"), gw = $("#screen-windows .grid"), gs = $("#screen-system .grid"), gl = $("#gamesList");
   [gp, gw, gs, gl].forEach((g) => g && (g.innerHTML = ""));
@@ -124,6 +138,7 @@ async function loadCatalog() {
   cat.tweaks.forEach((t) => grids[t.cat] && grids[t.cat].appendChild(makeCard(t)));
   (cat.games || []).forEach((g) => gl.appendChild(makeGameCard(g)));
   $("#gameCount").textContent = `${(cat.games || []).length} jogos`;
+  await refreshStatus();
   log(`Catálogo carregado: ${cat.tweaks.length} tweaks + ${(cat.games || []).length} jogos.`);
 }
 
@@ -196,8 +211,114 @@ async function updateMetrics() {
     const used = m.memTotal - m.memFree, memPct = Math.round((used / m.memTotal) * 100);
     $("#memPct").textContent = memPct + "%"; $("#memBar").style.width = memPct + "%"; $("#memSub").textContent = `${gb(used)} / ${gb(m.memTotal)} GB`;
     $("#cores").textContent = m.cores; $("#uptime").textContent = fmtUptime(m.uptime);
-    $("#osinfo").textContent = `Windows (${m.arch})`; $("#host").textContent = m.hostname;
+    $("#osinfo").textContent = `Windows (${m.arch})`;
   } catch (e) {}
+}
+
+// ---------------- FiveM ----------------
+const LS_XHAIRS = "vn_xhairs";
+const XHAIR_SUGGEST = [
+  { name: "s1mple", style: 4, size: 1, thick: 0, gap: -3, alpha: 255, color: 4, dot: 0, outline: 0 },
+  { name: "ZywOo", style: 4, size: 2, thick: 0, gap: -3, alpha: 255, color: 4, dot: 0, outline: 0 },
+  { name: "NiKo", style: 4, size: 2, thick: 1, gap: -2, alpha: 255, color: 1, dot: 0, outline: 0 },
+  { name: "donk", style: 4, size: 1, thick: 1, gap: -3, alpha: 255, color: 1, dot: 0, outline: 0 },
+  { name: "Ponto", style: 4, size: 0, thick: 1, gap: -5, alpha: 255, color: 4, dot: 1, outline: 0 },
+  { name: "Competitivo", style: 4, size: 2, thick: 1, gap: -2, alpha: 255, color: 5, dot: 0, outline: 1, r: 0, g: 255, b: 0 },
+];
+function xVal(id) { const e = $("#" + id); return e ? e.value : ""; }
+function buildXhair() {
+  const color = xVal("xColor");
+  const parts = [
+    `cl_crosshairstyle ${xVal("xStyle")}`,
+    `cl_crosshairsize ${xVal("xSize")}`,
+    `cl_crosshairthickness ${xVal("xThick")}`,
+    `cl_crosshairgap ${xVal("xGap")}`,
+    `cl_crosshairalpha ${xVal("xAlpha")}`,
+    `cl_crosshairdot ${$("#xDot").checked ? 1 : 0}`,
+    `cl_crosshair_drawoutline ${$("#xOutline").checked ? 1 : 0}`,
+    `cl_crosshair_outlinethickness ${$("#xOutline").checked ? 1 : 0}`,
+    `cl_crosshaircolor ${color}`,
+  ];
+  if (color === "5") parts.push(`cl_crosshaircolor_r ${xVal("xR")}`, `cl_crosshaircolor_g ${xVal("xG")}`, `cl_crosshaircolor_b ${xVal("xB")}`);
+  return parts.join("; ");
+}
+function drawCrosshair() {
+  const cv = $("#xhairCanvas"); if (!cv || !cv.getContext) return;
+  const ctx = cv.getContext("2d"), W = cv.width, H = cv.height, cx = W / 2, cy = H / 2;
+  const grd = ctx.createLinearGradient(0, 0, 0, H); grd.addColorStop(0, "#3b3b44"); grd.addColorStop(1, "#23232a");
+  ctx.fillStyle = grd; ctx.fillRect(0, 0, W, H);
+  const sz = Math.max(0, parseFloat(xVal("xSize")) || 0), gp = parseFloat(xVal("xGap")) || 0, th = Math.max(0.5, parseFloat(xVal("xThick")) || 0.5);
+  const lenPx = sz * 6 + 2, gapPx = Math.max(0, (gp + 4) * 2), thickPx = Math.max(1, th * 2);
+  const a = Math.max(0, Math.min(1, (parseFloat(xVal("xAlpha")) || 255) / 255));
+  const dot = $("#xDot").checked, outline = $("#xOutline").checked;
+  const colors = { "0": "255,0,0", "1": "0,255,0", "2": "255,255,0", "3": "0,0,255", "4": "0,255,255" };
+  const rgb = xVal("xColor") === "5" ? `${xVal("xR")},${xVal("xG")},${xVal("xB")}` : (colors[xVal("xColor")] || "0,255,255");
+  function shapes(color, inf) {
+    ctx.fillStyle = color; const t = thickPx + inf * 2, l = lenPx + inf;
+    ctx.fillRect(cx - gapPx - l, cy - t / 2, l, t);
+    ctx.fillRect(cx + gapPx - inf, cy - t / 2, l, t);
+    ctx.fillRect(cx - t / 2, cy - gapPx - l, t, l);
+    ctx.fillRect(cx - t / 2, cy + gapPx - inf, t, l);
+    if (dot) ctx.fillRect(cx - t / 2, cy - t / 2, t, t);
+  }
+  if (outline) shapes("rgba(0,0,0,0.9)", 1);
+  shapes(`rgba(${rgb},${a})`, 0);
+}
+function updateRgbVisibility() { const r = $("#xRgb"); if (r) r.hidden = xVal("xColor") !== "5"; }
+function renderXhair() { updateRgbVisibility(); const o = $("#xhairOut"); if (o) o.textContent = buildXhair(); drawCrosshair(); }
+function loadPreset(o) {
+  $("#xStyle").value = o.style; $("#xSize").value = o.size; $("#xThick").value = o.thick; $("#xGap").value = o.gap;
+  $("#xAlpha").value = o.alpha; $("#xColor").value = o.color; $("#xDot").checked = !!o.dot; $("#xOutline").checked = !!o.outline;
+  if (o.color === 5) { $("#xR").value = o.r != null ? o.r : 0; $("#xG").value = o.g != null ? o.g : 255; $("#xB").value = o.b != null ? o.b : 255; }
+  renderXhair();
+}
+function renderXhairSuggest() {
+  const box = $("#xhairSuggest"); if (!box) return; box.innerHTML = "";
+  XHAIR_SUGGEST.forEach((o) => { const c = document.createElement("span"); c.className = "chip"; c.textContent = o.name; c.addEventListener("click", () => loadPreset(o)); box.appendChild(c); });
+}
+function getXhairs() { try { return JSON.parse(localStorage.getItem(LS_XHAIRS) || "[]"); } catch { return []; } }
+function renderXhairPresets() {
+  const box = $("#xhairPresets"); if (!box) return; const list = getXhairs(); box.innerHTML = "";
+  if (!list.length) { box.innerHTML = `<span class="muted-line" style="margin:0">Nenhum preset salvo.</span>`; return; }
+  list.forEach((x, i) => {
+    const chip = document.createElement("span"); chip.className = "chip"; chip.innerHTML = `${x.name} <b data-i="${i}">x</b>`;
+    chip.addEventListener("click", (e) => {
+      if (e.target.tagName === "B") { const l = getXhairs(); l.splice(i, 1); localStorage.setItem(LS_XHAIRS, JSON.stringify(l)); renderXhairPresets(); return; }
+      navigator.clipboard.writeText(x.cmd); notify(`Crosshair "${x.name}" copiado.`, "ok");
+    });
+    box.appendChild(chip);
+  });
+}
+function setupFivem() {
+  // sub-tabs
+  document.querySelectorAll(".subtab").forEach((b) => b.addEventListener("click", () => {
+    document.querySelectorAll(".subtab").forEach((x) => x.classList.toggle("active", x === b));
+    document.querySelectorAll(".subpanel").forEach((pp) => pp.classList.remove("active"));
+    $("#sub-" + b.dataset.sub).classList.add("active");
+    if (b.dataset.sub === "xhair") drawCrosshair();
+  }));
+
+  // cache (operacao local; nao depende do servidor)
+  async function loadInfo() {
+    const info = await window.api.fivemInfo();
+    $("#fmPath").textContent = info.found ? `Encontrado: ${info.app}` : "FiveM nao encontrado. Clique em 'Escolher pasta'.";
+    $("#fmClean").disabled = !info.found;
+  }
+  loadInfo();
+  $("#fmClean").addEventListener("click", () => withBusy(async () => {
+    const r = await window.api.fivemClean();
+    if (r && r.ok) notify(`Cache do FiveM limpo (${r.removed} itens).`, "ok");
+    else notify("FiveM nao encontrado. Use 'Escolher pasta'.", "warn");
+  }));
+  $("#fmPick").addEventListener("click", async () => { await window.api.fivemPick(); await loadInfo(); });
+
+  // crosshair
+  ["xStyle", "xSize", "xThick", "xGap", "xAlpha", "xColor", "xR", "xG", "xB"].forEach((id) => { const e = $("#" + id); if (e) e.addEventListener("input", renderXhair); });
+  $("#xDot").addEventListener("change", renderXhair);
+  $("#xOutline").addEventListener("change", renderXhair);
+  $("#xhairCopy").addEventListener("click", () => { navigator.clipboard.writeText(buildXhair()); notify("Comando de crosshair copiado.", "ok"); });
+  $("#xhairSave").addEventListener("click", () => { const name = prompt("Nome do preset:"); if (!name) return; const l = getXhairs(); l.push({ name, cmd: buildXhair() }); localStorage.setItem(LS_XHAIRS, JSON.stringify(l)); renderXhairPresets(); });
+  renderXhairSuggest(); renderXhairPresets(); renderXhair();
 }
 
 // ---------------- init ----------------
@@ -205,33 +326,28 @@ async function init() {
   document.querySelectorAll(".nav-item").forEach((n) => n.addEventListener("click", () => go(n.dataset.screen)));
   document.querySelectorAll(".shortcut").forEach((s) => s.addEventListener("click", () => go(s.dataset.go)));
 
-  // atalhos de performance
   const perfActions = {
-    precision: async () => handleResult(await window.api.applyAll("precision"), "Precision Fix ativado."),
+    precision: async () => { if (handleResult(await window.api.applyAll("precision"), "Precision Fix ativado.")) await refreshStatus(); },
     ram: async () => handleResult(await window.api.apply("ramfull"), "Memória RAM limpa."),
     cache: async () => handleResult(await window.api.apply("limparcache"), "Cache do Windows limpo."),
     ping: async () => handleResult(await window.api.apply("ping"), "Ping otimizado."),
   };
   document.querySelectorAll(".perf-btn").forEach((b) => b.addEventListener("click", () => withBusy(perfActions[b.dataset.perf])));
 
-  // aplicar/reverter tudo
   document.querySelectorAll("[data-applyall]").forEach((b) => b.addEventListener("click", () =>
-    withBusy(async () => handleResult(await window.api.applyAll(b.dataset.applyall), `Aplicado tudo: ${b.dataset.applyall}`))));
+    withBusy(async () => { if (handleResult(await window.api.applyAll(b.dataset.applyall), `Aplicado tudo: ${b.dataset.applyall}`)) await refreshStatus(); })));
   document.querySelectorAll("[data-revertall]").forEach((b) => b.addEventListener("click", () =>
-    withBusy(async () => handleResult(await window.api.revertAll(b.dataset.revertall), `Revertido tudo: ${b.dataset.revertall}`))));
+    withBusy(async () => { if (handleResult(await window.api.revertAll(b.dataset.revertall), `Revertido tudo: ${b.dataset.revertall}`)) await refreshStatus(); })));
 
-  // busca de jogos
   $("#gameSearch").addEventListener("input", (e) => {
     const q = e.target.value.trim().toLowerCase(); let shown = 0;
     $("#gamesList").querySelectorAll(".card-game").forEach((c) => { const ok = c.dataset.name.includes(q); c.style.display = ok ? "" : "none"; if (ok) shown++; });
     $("#gameCount").textContent = `${shown} jogos`;
   });
 
-  // notificações
   renderBadge();
   $("#clearNotifs").addEventListener("click", () => { saveNotifs([]); setUnread(0); renderNotifs(); });
 
-  // configurações
   applyConsoleSetting();
   $("#setConsole").addEventListener("change", (e) => { localStorage.setItem(LS_CONSOLE, e.target.checked ? "1" : "0"); applyConsoleSetting(); });
   $("#setRebootNotif").checked = rebootNotifOn();
@@ -242,10 +358,10 @@ async function init() {
   $("#tlMin").addEventListener("click", () => window.api.winMin());
   $("#tlMax").addEventListener("click", () => window.api.winMax());
 
-  // versão no topo
   try { const v = await window.api.appVersion(); const el = $("#appVer"); if (el && v) el.textContent = "v" + v; } catch (e) {}
 
-  // auto-update
+  setupFivem();
+
   window.api.onUpdate((p) => {
     if (p.state === "available") notify(`Atualização ${p.version || ""} disponível — baixando...`, "info");
     else if (p.state === "downloaded") { notify(`Atualização ${p.version || ""} pronta.`, "ok"); if (confirm(`Atualização ${p.version || ""} baixada. Reiniciar agora?`)) window.api.updateRestart(); }
@@ -253,7 +369,6 @@ async function init() {
   });
 
   await initLicense();
-
   updateMetrics();
   setInterval(updateMetrics, 1500);
   if (window.lucide) lucide.createIcons();

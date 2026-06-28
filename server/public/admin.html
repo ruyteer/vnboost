@@ -4,149 +4,234 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>VN Boost · Admin</title>
+<link rel="icon" href="logo.png" />
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  :root { --bg:#0a0a0c; --panel:#15151a; --panel2:#1c1c23; --line:#2a2a33; --text:#f2f3f7;
-    --muted:#8b8d99; --red:#e10600; --red2:#ff2a25; --green:#28c840; --yellow:#febc2e; }
-  body { font-family:'Poppins',sans-serif; background:var(--bg); color:var(--text); padding:28px; }
-  h1 { font-size:22px; font-weight:800; } h1 span { color:var(--red2); }
-  .muted { color:var(--muted); font-size:13px; }
-  .card { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:20px; margin-top:18px; }
-  input, select { font-family:'Poppins',sans-serif; background:var(--panel2); border:1px solid var(--line);
-    color:var(--text); padding:10px 12px; border-radius:9px; font-size:13px; outline:none; }
-  input:focus, select:focus { border-color:var(--red); }
-  button { font-family:'Poppins',sans-serif; cursor:pointer; border:1px solid var(--line);
-    background:var(--panel2); color:var(--text); padding:9px 14px; border-radius:9px; font-size:12px; font-weight:600; transition:.15s; }
-  button:hover { border-color:var(--red); }
-  .btn-primary { background:linear-gradient(135deg,var(--red),#a30400); border-color:var(--red); color:#fff; font-weight:700; }
-  table { width:100%; border-collapse:collapse; margin-top:8px; font-size:12.5px; }
-  th, td { text-align:left; padding:10px 8px; border-bottom:1px solid var(--line); vertical-align:middle; }
-  th { color:var(--muted); font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:.5px; }
-  code { background:#0d0d10; padding:3px 7px; border-radius:6px; font-size:12px; color:#e7e9f0; }
-  .tag { font-size:10px; font-weight:700; padding:3px 8px; border-radius:20px; }
-  .tag-active { background:rgba(40,200,64,.15); color:var(--green); }
-  .tag-revoked { background:rgba(225,6,0,.15); color:var(--red2); }
-  .tag-unbound { background:rgba(254,188,46,.13); color:var(--yellow); }
-  .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
-  .actions button { padding:6px 9px; font-size:11px; margin-right:4px; }
-  .hidden { display:none; }
-  .hwid { max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:inline-block; vertical-align:middle; }
-  .toast { position:fixed; bottom:20px; right:20px; background:var(--panel2); border:1px solid var(--red);
-    padding:12px 16px; border-radius:10px; font-size:13px; opacity:0; transition:.2s; }
-  .toast.show { opacity:1; }
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#0a0a0c;--bg2:#101015;--panel:#15151a;--panel2:#1c1c23;--line:#2a2a33;--line-red:#3a1414;
+    --text:#f2f3f7;--muted:#8b8d99;--red:#e10600;--red2:#ff2a25;--red-glow:rgba(225,6,0,.5);
+    --green:#28c840;--yellow:#febc2e;--font:'Poppins',system-ui,sans-serif;
+  }
+  body{font-family:var(--font);color:var(--text);min-height:100vh;
+    background:
+      radial-gradient(1100px 500px at 80% -10%,rgba(225,6,0,.16),transparent 60%),
+      radial-gradient(800px 400px at -5% 110%,rgba(225,6,0,.10),transparent 55%),
+      var(--bg);}
+  .wrap{max-width:1150px;margin:0 auto;padding:28px 24px 60px}
+  svg{width:18px;height:18px;stroke-width:2;vertical-align:middle}
+
+  /* ---- login ---- */
+  .login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+  .login-card{width:100%;max-width:400px;text-align:center;
+    background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line);
+    border-radius:20px;padding:40px 34px}
+  .login-card img{max-width:180px;margin-bottom:8px}
+  .login-card h1{font-size:16px;font-weight:600;color:var(--muted);margin-bottom:24px;letter-spacing:.5px}
+  .login-card .field{display:flex;gap:10px}
+  .err{color:var(--red2);font-size:13px;margin-top:12px;min-height:18px}
+
+  /* ---- header ---- */
+  .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .brand{display:flex;align-items:center;gap:14px}
+  .brand img{height:52px}
+  .brand .sub{font-size:12px;color:var(--muted);letter-spacing:1px}
+  .brand h2{font-size:18px;font-weight:800}
+  .brand h2 b{color:var(--red2)}
+
+  /* ---- stats ---- */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:24px 0}
+  .stat{background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line);
+    border-radius:14px;padding:18px 20px;display:flex;align-items:center;gap:14px}
+  .stat .ic{width:42px;height:42px;border-radius:11px;display:grid;place-items:center;flex-shrink:0;
+    background:rgba(225,6,0,.12);color:var(--red2)}
+  .stat .ic svg{width:22px;height:22px}
+  .stat.green .ic{background:rgba(40,200,64,.13);color:var(--green)}
+  .stat.yellow .ic{background:rgba(254,188,46,.13);color:var(--yellow)}
+  .stat .n{font-size:24px;font-weight:800;line-height:1}
+  .stat .l{font-size:12px;color:var(--muted);margin-top:4px}
+
+  /* ---- cards ---- */
+  .card{background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line);
+    border-radius:16px;padding:22px;margin-bottom:18px}
+  .card-head{display:flex;align-items:center;gap:10px;margin-bottom:16px;font-size:15px;font-weight:700}
+  .card-head svg{color:var(--red2)}
+  .field{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  input,select{font-family:var(--font);background:var(--panel2);border:1px solid var(--line);color:var(--text);
+    padding:11px 13px;border-radius:10px;font-size:13px;outline:none;transition:.15s}
+  input:focus,select:focus{border-color:var(--red)}
+  .hint{font-size:12px;color:var(--muted);margin-top:10px}
+
+  button{font-family:var(--font);cursor:pointer;border:1px solid var(--line);background:var(--panel2);
+    color:var(--text);padding:10px 15px;border-radius:10px;font-size:12px;font-weight:700;letter-spacing:.5px;
+    transition:.15s;display:inline-flex;align-items:center;gap:7px}
+  button:hover{border-color:var(--red)}
+  .btn-primary{background:linear-gradient(135deg,var(--red),#a30400);border-color:var(--red);color:#fff;
+    box-shadow:0 6px 20px -8px var(--red-glow)}
+  .btn-primary:hover{filter:brightness(1.12)}
+  .btn-ghost{background:transparent;color:var(--muted)}
+
+  /* ---- table ---- */
+  .table-wrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:760px}
+  th,td{text-align:left;padding:12px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+  th{color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+  tbody tr{transition:.12s}
+  tbody tr:hover{background:rgba(255,255,255,.02)}
+  code{background:#0b0b0e;padding:4px 8px;border-radius:6px;font-size:12px;color:#e7e9f0}
+  .tag{font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;white-space:nowrap}
+  .tag-active{background:rgba(40,200,64,.15);color:var(--green)}
+  .tag-revoked{background:rgba(225,6,0,.15);color:var(--red2)}
+  .tag-unbound{background:rgba(254,188,46,.13);color:var(--yellow)}
+  .hwid{max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:middle;color:var(--muted)}
+  .actions{display:flex;gap:6px}
+  .ico-btn{padding:7px;border-radius:8px}
+  .ico-btn svg{width:15px;height:15px}
+  .ico-btn.danger:hover{border-color:var(--red);color:var(--red2)}
+
+  .empty{color:var(--muted);text-align:center;padding:34px;font-size:13px}
+  .hidden{display:none}
+  .toast{position:fixed;bottom:22px;right:22px;background:var(--panel2);border:1px solid var(--red);
+    padding:13px 18px;border-radius:11px;font-size:13px;opacity:0;transform:translateY(8px);transition:.2s;
+    box-shadow:0 10px 30px -10px var(--red-glow);display:flex;align-items:center;gap:9px}
+  .toast.show{opacity:1;transform:none}
+  .toast svg{color:var(--green)}
 </style>
 </head>
 <body>
-  <h1>VN <span>BOOST</span> · Gerenciador de Licenças</h1>
 
-  <!-- Login -->
-  <div class="card" id="loginCard">
-    <p class="muted" style="margin-bottom:12px">Informe o token de admin para acessar.</p>
-    <div class="row">
-      <input type="password" id="token" placeholder="ADMIN_TOKEN" style="flex:1;min-width:240px" />
-      <button class="btn-primary" id="loginBtn">Entrar</button>
+  <!-- LOGIN -->
+  <div class="login-screen" id="loginScreen">
+    <div class="login-card">
+      <img src="logo-text.png" alt="VN BOOST" />
+      <h1>Gerenciador de Licenças</h1>
+      <div class="field">
+        <input type="password" id="token" placeholder="ADMIN_TOKEN" style="flex:1" />
+        <button class="btn-primary" id="loginBtn"><i data-lucide="log-in"></i> Entrar</button>
+      </div>
+      <p class="err" id="loginErr"></p>
     </div>
-    <p class="muted" id="loginErr" style="color:var(--red2);margin-top:10px"></p>
   </div>
 
-  <!-- App -->
-  <div id="app" class="hidden">
-    <div class="card">
-      <b style="font-size:14px">Criar nova chave</b>
-      <div class="row" style="margin-top:14px">
-        <input id="cNote" placeholder="Nota (ex: cliente João)" style="flex:1;min-width:200px" />
-        <select id="cPlan">
-          <option value="standard">standard</option>
-          <option value="vip">vip</option>
-          <option value="lifetime">lifetime</option>
-        </select>
-        <input id="cDays" type="number" min="0" placeholder="Dias (vazio = sem expirar)" style="width:200px" />
-        <button class="btn-primary" id="createBtn">Gerar chave</button>
+  <!-- APP -->
+  <div class="wrap hidden" id="app">
+    <div class="top">
+      <div class="brand">
+        <img src="logo-text.png" alt="VN BOOST" />
+        <div>
+          <h2>VN <b>BOOST</b></h2>
+          <div class="sub">Gerenciador de Licenças</div>
+        </div>
       </div>
-      <p class="muted" style="margin-top:10px">A chave nasce solta e vincula no 1º uso ao HWID do cliente.</p>
+      <button class="btn-ghost" id="logoutBtn"><i data-lucide="log-out"></i> Sair</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="ic"><i data-lucide="key-round"></i></div><div><div class="n" id="stTotal">0</div><div class="l">Total de chaves</div></div></div>
+      <div class="stat green"><div class="ic"><i data-lucide="circle-check"></i></div><div><div class="n" id="stActive">0</div><div class="l">Ativas</div></div></div>
+      <div class="stat yellow"><div class="ic"><i data-lucide="clock"></i></div><div><div class="n" id="stUnused">0</div><div class="l">Não usadas</div></div></div>
+      <div class="stat"><div class="ic"><i data-lucide="ban"></i></div><div><div class="n" id="stRevoked">0</div><div class="l">Revogadas</div></div></div>
     </div>
 
     <div class="card">
-      <div class="row" style="justify-content:space-between">
-        <b style="font-size:14px">Licenças</b>
-        <button id="refreshBtn">Atualizar</button>
+      <div class="card-head"><i data-lucide="plus-circle"></i> Criar nova chave</div>
+      <div class="field">
+        <input id="cNote" placeholder="Nota (ex: cliente João)" style="flex:1;min-width:200px" />
+        <select id="cPlan"><option value="standard">standard</option><option value="vip">vip</option><option value="lifetime">lifetime</option></select>
+        <input id="cDays" type="number" min="0" placeholder="Dias (vazio = sem expirar)" style="width:210px" />
+        <button class="btn-primary" id="createBtn"><i data-lucide="sparkles"></i> Gerar chave</button>
       </div>
-      <table>
-        <thead><tr>
-          <th>Chave</th><th>Status</th><th>HWID</th><th>Nota</th><th>Plano</th><th>Expira</th><th>Último acesso</th><th>Ações</th>
-        </tr></thead>
-        <tbody id="rows"></tbody>
-      </table>
+      <p class="hint">A chave nasce solta e vincula no 1º uso ao HWID do cliente.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-head" style="justify-content:space-between">
+        <span><i data-lucide="list"></i> Licenças</span>
+        <button id="refreshBtn"><i data-lucide="refresh-cw"></i> Atualizar</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Chave</th><th>Status</th><th>HWID</th><th>Nota</th><th>Plano</th><th>Expira</th><th>Último acesso</th><th>Ações</th>
+          </tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
   <div class="toast" id="toast"></div>
 
+<script src="https://unpkg.com/lucide@latest"></script>
 <script>
-const $ = (s)=>document.querySelector(s);
-let TOKEN = sessionStorage.getItem("vn_admin_token") || "";
-
-function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),2200); }
-async function api(path, opts={}){
-  const r = await fetch(path, { ...opts, headers:{ "Content-Type":"application/json", "x-admin-token":TOKEN, ...(opts.headers||{}) } });
+const $=(s)=>document.querySelector(s);
+let TOKEN=sessionStorage.getItem("vn_admin_token")||"";
+function icons(){ if(window.lucide) lucide.createIcons(); }
+function toast(msg){ const t=$("#toast"); t.innerHTML='<i data-lucide="check"></i> '+msg; t.classList.add("show"); icons(); setTimeout(()=>t.classList.remove("show"),2300); }
+async function api(path,opts={}){
+  const r=await fetch(path,{...opts,headers:{"Content-Type":"application/json","x-admin-token":TOKEN,...(opts.headers||{})}});
   if(r.status===401){ logout(); throw new Error("Não autorizado"); }
   return r.json();
 }
-function fmt(d){ return d ? new Date(d).toLocaleString() : "—"; }
+function fmt(d){ return d? new Date(d).toLocaleString():"—"; }
 function statusTag(l){
   if(l.status==="revoked") return '<span class="tag tag-revoked">revogada</span>';
   if(!l.hwid) return '<span class="tag tag-unbound">não usada</span>';
   return '<span class="tag tag-active">ativa</span>';
 }
-
 async function load(){
-  const d = await api("/api/admin/keys");
-  const tb = $("#rows"); tb.innerHTML="";
-  (d.licenses||[]).forEach(l=>{
+  const d=await api("/api/admin/keys"); const list=d.licenses||[];
+  $("#stTotal").textContent=list.length;
+  $("#stActive").textContent=list.filter(l=>l.status!=="revoked"&&l.hwid).length;
+  $("#stUnused").textContent=list.filter(l=>l.status!=="revoked"&&!l.hwid).length;
+  $("#stRevoked").textContent=list.filter(l=>l.status==="revoked").length;
+  const tb=$("#rows"); tb.innerHTML="";
+  if(!list.length){ tb.innerHTML='<tr><td colspan="8"><div class="empty">Nenhuma licença ainda. Gere a primeira acima.</div></td></tr>'; return; }
+  list.forEach(l=>{
     const tr=document.createElement("tr");
-    tr.innerHTML = `
+    tr.innerHTML=`
       <td><code>${l.key}</code></td>
       <td>${statusTag(l)}</td>
-      <td>${l.hwid ? `<span class="hwid" title="${l.hwid}">${l.hwid}</span>` : "—"}</td>
+      <td>${l.hwid?`<span class="hwid" title="${l.hwid}">${l.hwid}</span>`:"—"}</td>
       <td>${l.note||"—"}</td>
       <td>${l.plan||"—"}</td>
       <td>${l.expires_at?fmt(l.expires_at):"nunca"}</td>
       <td>${fmt(l.last_seen)}</td>
-      <td class="actions">
-        <button onclick="copyKey('${l.key}')">Copiar</button>
+      <td><div class="actions">
+        <button class="ico-btn" title="Copiar chave" onclick="copyKey('${l.key}')"><i data-lucide="copy"></i></button>
         ${l.status==="revoked"
-          ? `<button onclick="act(${l.id},'restore')">Restaurar</button>`
-          : `<button onclick="act(${l.id},'revoke')">Revogar</button>`}
-        <button onclick="act(${l.id},'unbind')">Desvincular</button>
-        <button onclick="del(${l.id})">Excluir</button>
-      </td>`;
+          ? `<button class="ico-btn" title="Restaurar" onclick="act(${l.id},'restore')"><i data-lucide="rotate-ccw"></i></button>`
+          : `<button class="ico-btn danger" title="Revogar" onclick="act(${l.id},'revoke')"><i data-lucide="ban"></i></button>`}
+        <button class="ico-btn" title="Desvincular HWID" onclick="act(${l.id},'unbind')"><i data-lucide="unlink"></i></button>
+        <button class="ico-btn danger" title="Excluir" onclick="del(${l.id})"><i data-lucide="trash-2"></i></button>
+      </div></td>`;
     tb.appendChild(tr);
   });
+  icons();
 }
 window.copyKey=(k)=>{ navigator.clipboard.writeText(k); toast("Chave copiada"); };
-window.act=async(id,action)=>{ await api(`/api/admin/keys/${id}/${action}`,{method:"POST"}); toast("Feito"); load(); };
+window.act=async(id,a)=>{ await api(`/api/admin/keys/${id}/${a}`,{method:"POST"}); toast("Feito"); load(); };
 window.del=async(id)=>{ if(!confirm("Excluir esta licença?"))return; await api(`/api/admin/keys/${id}`,{method:"DELETE"}); toast("Excluída"); load(); };
 
-$("#createBtn").addEventListener("click", async ()=>{
-  const note=$("#cNote").value.trim();
-  const plan=$("#cPlan").value;
-  const days=parseInt($("#cDays").value,10);
-  let expiresAt=null;
-  if(days>0){ const d=new Date(); d.setDate(d.getDate()+days); expiresAt=d.toISOString(); }
+$("#createBtn").addEventListener("click",async()=>{
+  const note=$("#cNote").value.trim(), plan=$("#cPlan").value, days=parseInt($("#cDays").value,10);
+  let expiresAt=null; if(days>0){ const d=new Date(); d.setDate(d.getDate()+days); expiresAt=d.toISOString(); }
   const r=await api("/api/admin/keys",{method:"POST",body:JSON.stringify({note,plan,expiresAt})});
-  if(r.ok){ $("#cNote").value=""; $("#cDays").value=""; toast("Chave: "+r.license.key); load(); }
+  if(r.ok){ $("#cNote").value="";$("#cDays").value=""; navigator.clipboard.writeText(r.license.key); toast("Chave gerada e copiada: "+r.license.key); load(); }
 });
-$("#refreshBtn").addEventListener("click", load);
+$("#refreshBtn").addEventListener("click",load);
 
-function showApp(){ $("#loginCard").classList.add("hidden"); $("#app").classList.remove("hidden"); load(); }
-function logout(){ sessionStorage.removeItem("vn_admin_token"); TOKEN=""; $("#app").classList.add("hidden"); $("#loginCard").classList.remove("hidden"); }
-$("#loginBtn").addEventListener("click", async ()=>{
+function showApp(){ $("#loginScreen").classList.add("hidden"); $("#app").classList.remove("hidden"); icons(); load(); }
+function logout(){ sessionStorage.removeItem("vn_admin_token"); TOKEN=""; $("#app").classList.add("hidden"); $("#loginScreen").classList.remove("hidden"); }
+$("#logoutBtn").addEventListener("click",logout);
+$("#loginBtn").addEventListener("click",async()=>{
   TOKEN=$("#token").value.trim();
   try{ const d=await api("/api/admin/keys"); if(d.ok){ sessionStorage.setItem("vn_admin_token",TOKEN); showApp(); } }
   catch(e){ $("#loginErr").textContent="Token inválido."; }
 });
+$("#token").addEventListener("keydown",(e)=>{ if(e.key==="Enter") $("#loginBtn").click(); });
 
+icons();
 if(TOKEN){ showApp(); }
 </script>
 </body>

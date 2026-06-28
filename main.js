@@ -1,5 +1,5 @@
 "use strict";
-const { app, BrowserWindow, ipcMain } = require("electron");
+const { app, BrowserWindow, ipcMain, dialog } = require("electron");
 const path = require("path");
 const os = require("os");
 const { exec } = require("child_process");
@@ -7,6 +7,7 @@ const tweaks = require("./lib/tweaks");
 const backup = require("./lib/backup");
 const license = require("./lib/license");
 const { getHwid } = require("./lib/hwid");
+const fivem = require("./lib/fivem");
 const { autoUpdater } = require("electron-updater");
 let updLog = null;
 try { updLog = require("electron-log"); } catch (e) { /* opcional */ }
@@ -56,6 +57,7 @@ app.whenReady().then(async () => {
   }
   backup.init(app.getPath("userData"));
   license.init(app.getPath("userData"));
+  fivem.init(app.getPath("userData"));
   const eslPath = app.isPackaged
     ? path.join(process.resourcesPath, "EmptyStandbyList.exe")
     : path.join(__dirname, "resources", "EmptyStandbyList.exe");
@@ -105,6 +107,21 @@ ipcMain.handle("get-metrics", () => ({
 
 // ----- Catalogo + acoes (tudo validado no servidor a cada chamada) -----
 function logToRenderer(text) { if (win && !win.isDestroyed()) win.webContents.send("log", text); }
+
+ipcMain.handle("tweak-status", async () => {
+  const c = lastCatalog;
+  const tw = (c && c.ok) ? await tweaks.probeAll(c.tweaks) : [];
+  return { tweaks: tw, games: tweaks.gamesApplied(), total: (c && c.ok) ? c.tweaks.filter((t) => !t.action).length : 0 };
+});
+
+ipcMain.handle("fivem:info", () => fivem.info());
+ipcMain.handle("fivem:clean", () => fivem.cleanCacheSafe(logToRenderer));
+ipcMain.handle("fivem:pick", async () => {
+  const r = await dialog.showOpenDialog(win, { title: "Selecione a pasta do FiveM (FiveM.app)", properties: ["openDirectory"] });
+  if (r.canceled || !r.filePaths[0]) return fivem.info();
+  return fivem.setPath(r.filePaths[0]);
+});
+ipcMain.handle("fivem:setPath", (_e, p) => fivem.setPath(p));
 
 ipcMain.handle("catalog", async () => {
   const hwid = await getHwid();

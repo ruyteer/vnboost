@@ -384,11 +384,46 @@ const GAMES = [
   { name: "Resident Evil Requiem", exes: ["re9.exe"] },
 ];
 
+
+// "probes": como verificar no PC se o tweak ja esta aplicado (estado real).
+const PROBES = {
+  tracking: { type: "reg", path: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl", name: "Win32PrioritySeparation", equals: "38" },
+  sensi: { type: "reg", path: HKCU_MOUSE, name: "SmoothMouseXCurve", equals: MARKC_X },
+  sensixy: { type: "reg", path: HKCU_MOUSE, name: "MouseSensitivity", equals: "10" },
+  flick: { type: "reg", path: HKCU_MOUSE, name: "MouseHoverTime", equals: "10" },
+  boostfivem: { type: "reg", path: IFEO + "\\GTA5.exe\\PerfOptions", name: "CpuPriorityClass", equals: "3" },
+  halfms: { type: "cmd", run: 'bcdedit /enum "{current}"', contains: "useplatformtick" },
+  mouseregs: { type: "reg", path: "HKLM\\SYSTEM\\CurrentControlSet\\Services\\mouclass\\Parameters", name: "MouseDataQueueSize", equals: "20" },
+  islc: { type: "reg", path: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management", name: "DisablePagingExecutive", equals: "1" },
+  filterkeys: { type: "reg", path: HKCU_ACC + "\\Keyboard Response", name: "Flags", equals: "122" },
+  flags: { type: "reg", path: GAMES_TASK, name: "GPU Priority", equals: "8" },
+  accessibility: { type: "reg", path: HKCU_ACC + "\\StickyKeys", name: "Flags", equals: "506" },
+  kbdqueue: { type: "reg", path: "HKLM\\SYSTEM\\CurrentControlSet\\Services\\kbdclass\\Parameters", name: "KeyboardDataQueueSize", equals: "20" },
+  kbresponse: { type: "reg", path: "HKCU\\Control Panel\\Desktop", name: "MenuShowDelay", equals: "0" },
+  hags: { type: "reg", path: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers", name: "HwSchMode", equals: "2" },
+  fse: { type: "reg", path: "HKCU\\System\\GameConfigStore", name: "GameDVR_FSEBehaviorMode", equals: "2" },
+  efeitos: { type: "reg", path: "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VisualEffects", name: "VisualFXSetting", equals: "2" },
+  appsbg: { type: "reg", path: "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\BackgroundAccessApplications", name: "GlobalUserDisabled", equals: "1" },
+  servicos: { type: "cmd", run: "sc qc Spooler", contains: "DISABLED" },
+  gamebar: { type: "reg", path: "HKCU\\System\\GameConfigStore", name: "GameDVR_Enabled", equals: "0" },
+  werror: { type: "reg", path: "HKLM\\SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting", name: "Disabled", equals: "1" },
+  telemetria: { type: "reg", path: "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection", name: "AllowTelemetry", equals: "0" },
+  hibernacao: { type: "reg", path: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Power", name: "HibernateEnabled", equals: "0" },
+  memcomp: { type: "cmd", run: 'powershell -NoProfile -Command "(Get-MMAgent).MemoryCompression"', contains: "False" },
+  indexacao: { type: "cmd", run: "sc qc WSearch", contains: "DISABLED" },
+  menuiniciar: { type: "reg", path: "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Search", name: "BingSearchEnabled", equals: "0" },
+  cortana: { type: "reg", path: "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Search", name: "AllowCortana", equals: "0" },
+  prefetch: { type: "reg", path: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\\PrefetchParameters", name: "EnablePrefetcher", equals: "0" },
+  priocpugpu: { type: "reg", path: MMCSS, name: "SystemResponsiveness", equals: "0" },
+  prioforeground: { type: "reg", path: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl", name: "Win32PrioritySeparation", equals: "38" },
+};
+
 // ---- acessores ----
 function metaList() {
   return TWEAKS.map((t) => ({
     id: t.id, cat: t.cat, name: t.name, desc: t.desc,
     action: !!t.action, confirm: t.confirm || null, note: t.note || null,
+    probe: PROBES[t.id] || null,
   }));
 }
 function gameNames() { return GAMES.map((g) => ({ name: g.name })); }
