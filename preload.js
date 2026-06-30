@@ -16,6 +16,7 @@ contextBridge.exposeInMainWorld("api", {
   revertGame: (name) => ipcRenderer.invoke("revert-game", name),
   // metricas / log / janela
   getMetrics: () => ipcRenderer.invoke("get-metrics"),
+  createRestorePoint: () => ipcRenderer.invoke("create-restore-point"),
   onLog: (cb) => ipcRenderer.on("log", (_e, text) => cb(text)),
   winMin: () => ipcRenderer.send("win-min"),
   winMax: () => ipcRenderer.send("win-max"),

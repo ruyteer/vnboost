@@ -8,12 +8,18 @@ const backup = require("./lib/backup");
 const license = require("./lib/license");
 const { getHwid } = require("./lib/hwid");
 const fivem = require("./lib/fivem");
+const { run } = require("./lib/runner");
 const { autoUpdater } = require("electron-updater");
 let updLog = null;
 try { updLog = require("electron-log"); } catch (e) { /* opcional */ }
 
 let win = null;
 let lastCatalog = null;
+
+// Silencia logs de cache de GPU e impede duas instancias (causa do "Acesso negado" no cache)
+app.commandLine.appendSwitch("disable-gpu-shader-disk-cache");
+if (!app.requestSingleInstanceLock()) { app.quit(); }
+else { app.on("second-instance", () => { if (win) { if (win.isMinimized()) win.restore(); win.focus(); } }); }
 
 function isAdmin() {
   return new Promise((resolve) => { exec("net session", { windowsHide: true }, (err) => resolve(!err)); });
@@ -112,6 +118,13 @@ ipcMain.handle("tweak-status", async () => {
   const c = lastCatalog;
   const tw = (c && c.ok) ? await tweaks.probeAll(c.tweaks) : [];
   return { tweaks: tw, games: tweaks.gamesApplied(), total: (c && c.ok) ? c.tweaks.filter((t) => !t.action).length : 0 };
+});
+
+ipcMain.handle("create-restore-point", async () => {
+  await run('reg add "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\SystemRestore" /v SystemRestorePointCreationFrequency /t REG_DWORD /d 0 /f');
+  await run("powershell -NoProfile -Command \"Enable-ComputerRestore -Drive 'C:\\'\"");
+  const r = await run("powershell -NoProfile -Command \"Checkpoint-Computer -Description 'VN Boost' -RestorePointType 'MODIFY_SETTINGS'\"");
+  return { ok: r.ok, msg: r.ok ? "ok" : (r.stderr || r.stdout || "").split(/\r?\n/).find(Boolean) || "" };
 });
 
 ipcMain.handle("fivem:info", () => fivem.info());

@@ -382,6 +382,13 @@ async function init() {
   $("#tlMin").addEventListener("click", () => window.api.winMin());
   $("#tlMax").addEventListener("click", () => window.api.winMax());
 
+  const rp = $("#restorePoint");
+  if (rp) rp.addEventListener("click", () => withBusy(async () => {
+    rp.disabled = true; notify("Criando ponto de restauração...", "info");
+    const r = await window.api.createRestorePoint();
+    notify(r && r.ok ? "Ponto de restauração criado!" : "Não consegui criar (a Proteção do Sistema pode estar desativada).", r && r.ok ? "ok" : "warn");
+  }));
+
   try { const v = await window.api.appVersion(); const el = $("#appVer"); if (el && v) el.textContent = "v" + v; } catch (e) {}
 
   setupFivem();

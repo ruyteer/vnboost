@@ -266,3 +266,8 @@ body {
 .rgb-row { grid-column: 1 / -1; display: flex; gap: 10px; }
 .rgb-row label { flex: 1; }
 .prev-label { display: block; text-align: center; font-size: 11px; color: var(--muted); margin-top: 8px; }
+
+/* Dashboard header + botao pequeno */
+.dash-head { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+.btn-sm { padding: 8px 12px; font-size: 11px; }
+.btn-sm svg { width: 14px; height: 14px; }

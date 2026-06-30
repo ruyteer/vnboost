@@ -180,6 +180,7 @@ const TWEAKS = [
     reg: [
       { path: "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\BackgroundAccessApplications", name: "GlobalUserDisabled", type: "REG_DWORD", data: "1" },
       { path: "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", name: "Start_TrackProgs", type: "REG_DWORD", data: "0" },
+      { path: "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Search", name: "BackgroundAppGlobalToggle", type: "REG_DWORD", data: "0" },
     ] },
 
   { id: "servicos", cat: "windows", name: "Desat. Servicos Inuteis",
@@ -208,6 +209,8 @@ const TWEAKS = [
       { path: "HKCU\\Software\\Microsoft\\GameBar", name: "ShowStartupPanel", type: "REG_DWORD", data: "0" },
       { path: "HKCU\\Software\\Microsoft\\GameBar", name: "UseNexusForGameBarEnabled", type: "REG_DWORD", data: "0" },
       { path: "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\GameDVR", name: "AppCaptureEnabled", type: "REG_DWORD", data: "0" },
+      { path: "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\GameDVR", name: "AllowGameDVR", type: "REG_DWORD", data: "0" },
+      { path: "HKLM\\SOFTWARE\\Microsoft\\PolicyManager\\default\\ApplicationManagement\\AllowGameDVR", name: "value", type: "REG_DWORD", data: "0" },
     ] },
 
   { id: "werror", cat: "windows", name: "Desat. Relatorios de Erro",
@@ -225,17 +228,6 @@ const TWEAKS = [
       { path: "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\CloudContent", name: "DisableMicrosoftConsumerExperience", type: "REG_DWORD", data: "1" },
       { path: "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate", name: "DoNotConnectToWindowsUpdateInternetLocations", type: "REG_DWORD", data: "1" },
     ] },
-
-  { id: "hibernacao", cat: "windows", name: "Desat. Hibernacao",
-    desc: "Desativa a hibernacao e libera espaco do hiberfil.sys.",
-    cmds: ["powercfg -h off"],
-    revert: ["powercfg -h on"] },
-
-  { id: "memcomp", cat: "windows", name: "Desat. Compressao de Memoria",
-    desc: "Desliga a compressao de memoria do Windows.",
-    cmds: ['powershell -Command "Disable-MMAgent -MemoryCompression"'],
-    revert: ['powershell -Command "Enable-MMAgent -MemoryCompression"'],
-    note: "Indicado para PCs com mais de 8GB de RAM." },
 
   { id: "indexacao", cat: "windows", name: "Desat. Indexacao",
     desc: "Desativa o servico de indexacao de pesquisa (WSearch).",
@@ -255,16 +247,6 @@ const TWEAKS = [
     desc: "Desativa a Cortana via politica do sistema.",
     reg: [{ path: "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Search", name: "AllowCortana", type: "REG_DWORD", data: "0" }] },
 
-  { id: "prefetch", cat: "windows", name: "Desat. Prefetch/Superfetch",
-    desc: "Desliga Prefetcher/Superfetch e o servico SysMain.",
-    reg: [
-      { path: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\\PrefetchParameters", name: "EnablePrefetcher", type: "REG_DWORD", data: "0" },
-      { path: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\\PrefetchParameters", name: "EnableSuperfetch", type: "REG_DWORD", data: "0" },
-    ],
-    cmds: ["sc stop SysMain", "sc config SysMain start= disabled"],
-    revert: ["sc config SysMain start= auto", "sc start SysMain"],
-    note: "Indicado para HDD. Em SSD, so se houver uso de disco 100%." },
-
   { id: "priocpugpu", cat: "windows", name: "Prioridade CPU/GPU",
     desc: "Aumenta a prioridade de CPU/GPU para jogos (MMCSS, SystemResponsiveness=0).",
     reg: [
@@ -283,11 +265,6 @@ const TWEAKS = [
       { path: GAMES_TASK, name: "Priority", type: "REG_DWORD", data: "6" },
       { path: GAMES_TASK, name: "Scheduling Category", type: "REG_SZ", data: "High" },
     ] },
-
-  { id: "mpo", cat: "windows", name: "Desativar MPO",
-    desc: "Desativa o Multiplane Overlay (resolve flicker, tearing e stutter em alguns PCs).",
-    reg: [{ path: "HKLM\\SOFTWARE\\Microsoft\\Windows\\Dwm", name: "OverlayTestMode", type: "REG_DWORD", data: "5" }],
-    note: "Se a tela piscar/ficar estranha, reverta." },
 
   { id: "ulps", cat: "windows", name: "Desativar ULPS (AMD)",
     desc: "Desativa o ULPS da AMD (evita quedas de clock e stutter). So afeta GPU AMD.",
@@ -323,15 +300,6 @@ const TWEAKS = [
       "netsh int tcp set global timestamps=enabled",
     ] },
 
-  { id: "largesyscache", cat: "windows", name: "Cache de Arquivos na RAM",
-    desc: "Aumenta o cache de arquivos do sistema na memoria (LargeSystemCache).",
-    reg: [{ path: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management", name: "LargeSystemCache", type: "REG_DWORD", data: "1" }],
-    note: "Indicado para PCs com bastante RAM." },
-
-  { id: "svchostsplit", cat: "windows", name: "Agrupar Servicos (svchost)",
-    desc: "Ajusta o limite de split do svchost ao total de RAM do PC (menos processos svchost, menos overhead).",
-    special: "svchostsplit", note: "Precisa reiniciar para valer." },
-
   { id: "amdoverlay", cat: "windows", name: "Desat. Overlay/Telemetria AMD",
     desc: "Desliga conteudo web, telemetria e auto-update do AMD Software. So GPU AMD.",
     reg: [
@@ -339,10 +307,31 @@ const TWEAKS = [
       { path: "HKLM\\SOFTWARE\\AMD\\CN", name: "AutoUpdate", type: "REG_DWORD", data: "0" },
     ], note: "So AMD." },
 
-  { id: "nvshadowplay", cat: "windows", name: "Desat. NVIDIA ShadowPlay",
-    desc: "Desliga o ShadowPlay/overlay da NVIDIA (menos uso em segundo plano). So GPU NVIDIA.",
-    reg: [{ path: "HKLM\\SOFTWARE\\NVIDIA Corporation\\Global\\ShadowPlay", name: "Allow", type: "REG_DWORD", data: "0" }],
-    note: "So NVIDIA." },
+  { id: "gamemode", cat: "windows", name: "Ativar Game Mode",
+    desc: "Liga o Modo de Jogo do Windows (prioriza recursos para o jogo em foco).",
+    reg: [
+      { path: "HKCU\\Software\\Microsoft\\GameBar", name: "AllowAutoGameMode", type: "REG_DWORD", data: "1" },
+      { path: "HKCU\\Software\\Microsoft\\GameBar", name: "AutoGameModeEnabled", type: "REG_DWORD", data: "1" },
+    ] },
+
+  { id: "dicas", cat: "windows", name: "Desat. Dicas e Sugestoes",
+    desc: "Remove sugestoes, dicas e conteudo promocional do Windows.",
+    reg: [
+      { path: "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager", name: "SubscribedContent-338389Enabled", type: "REG_DWORD", data: "0" },
+      { path: "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager", name: "SubscribedContent-353698Enabled", type: "REG_DWORD", data: "0" },
+      { path: "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager", name: "SystemPaneSuggestionsEnabled", type: "REG_DWORD", data: "0" },
+    ] },
+
+  { id: "notifsug", cat: "windows", name: "Desat. Notificacoes Sugeridas",
+    desc: "Desliga as notificacoes de sugestao do Windows.",
+    reg: [{ path: "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Notifications\\Settings\\Windows.SystemToast.Suggested", name: "Enabled", type: "REG_DWORD", data: "0" }] },
+
+  { id: "explorerui", cat: "windows", name: "Otimizar Explorer",
+    desc: "Abre o Explorer no 'Este PC' e remove notificacoes de sincronizacao.",
+    reg: [
+      { path: "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", name: "LaunchTo", type: "REG_DWORD", data: "1" },
+      { path: "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", name: "ShowSyncProviderNotifications", type: "REG_DWORD", data: "0" },
+    ] },
 
   // ---------------- SYSTEM (acoes) ----------------
   { id: "ping", cat: "system", name: "Melhorar Ping/DNS",
@@ -377,6 +366,24 @@ const TWEAKS = [
     desc: "Roda DISM RestoreHealth e SFC /scannow para reparar o sistema.",
     cmds: ["DISM /Online /Cleanup-Image /RestoreHealth", "sfc /scannow"],
     action: true, note: "Demora varios minutos. Aguarde terminar." },
+
+  { id: "delprefetch", cat: "system", name: "Limpar Prefetch",
+    desc: "Apaga os arquivos da pasta C:\\Windows\\Prefetch.",
+    cmds: ['del /q /f /s "%SystemRoot%\\Prefetch\\*"'],
+    action: true },
+
+  { id: "deltemp", cat: "system", name: "Limpar Temporarios (%temp%)",
+    desc: "Apaga arquivos e pastas dos temporarios do usuario (%temp%).",
+    cmds: ['del /q /f /s "%TEMP%\\*"', 'for /d %i in ("%TEMP%\\*") do @rd /s /q "%i"'],
+    action: true },
+
+  { id: "cleanmgr", cat: "system", name: "CleanMGR",
+    desc: "Realizar limpeza (cleanmgr) - limpeza profunda do Windows: thumbnails, Windows.old, updates antigos e mais.",
+    cmds: [
+      "cleanmgr /sageset:1",
+      "cleanmgr /sagerun:1",
+    ],
+    action: true, note: "Pode abrir uma janela do Windows e demorar alguns minutos." },
 
   { id: "restart", cat: "system", name: "Reiniciar PC",
     desc: "Reinicia o computador agora (aplica os tweaks que precisam de reboot).",
@@ -450,13 +457,13 @@ const GAMES = [
 // sub-categoria dentro da aba Windows
 const SUBS = {
   energia: "Desempenho", priocpugpu: "Desempenho", prioforeground: "Desempenho",
-  mpo: "GPU", ulps: "GPU", shadercache: "GPU",
+  ulps: "GPU", shadercache: "GPU",
   netthrottle: "Rede", tcplatency: "Rede",
   telemetria: "Privacidade", cortana: "Privacidade", gamebar: "Privacidade",
   werror: "Privacidade", menuiniciar: "Privacidade", appsbg: "Privacidade",
-  efeitos: "Sistema", hibernacao: "Sistema", memcomp: "Sistema",
-  indexacao: "Sistema", prefetch: "Sistema", servicos: "Sistema", ntfsaccess: "Sistema",
-  largesyscache: "Sistema", svchostsplit: "Sistema", amdoverlay: "GPU", nvshadowplay: "GPU",
+  efeitos: "Sistema", indexacao: "Sistema", servicos: "Sistema", ntfsaccess: "Sistema",
+  amdoverlay: "GPU",
+  gamemode: "Desempenho", dicas: "Privacidade", notifsug: "Privacidade", explorerui: "Sistema",
 };
 
 // "probes": como verificar no PC se o tweak ja esta aplicado (estado real).
@@ -482,18 +489,18 @@ const PROBES = {
   gamebar: { type: "reg", path: "HKCU\\System\\GameConfigStore", name: "GameDVR_Enabled", equals: "0" },
   werror: { type: "reg", path: "HKLM\\SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting", name: "Disabled", equals: "1" },
   telemetria: { type: "reg", path: "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection", name: "AllowTelemetry", equals: "0" },
-  hibernacao: { type: "reg", path: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Power", name: "HibernateEnabled", equals: "0" },
-  memcomp: { type: "cmd", run: 'powershell -NoProfile -Command "(Get-MMAgent).MemoryCompression"', contains: "False" },
   indexacao: { type: "cmd", run: "sc qc WSearch", contains: "DISABLED" },
   menuiniciar: { type: "reg", path: "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Search", name: "BingSearchEnabled", equals: "0" },
   cortana: { type: "reg", path: "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Search", name: "AllowCortana", equals: "0" },
-  prefetch: { type: "reg", path: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\\PrefetchParameters", name: "EnablePrefetcher", equals: "0" },
   priocpugpu: { type: "reg", path: MMCSS, name: "SystemResponsiveness", equals: "0" },
-  mpo: { type: "reg", path: "HKLM\\SOFTWARE\\Microsoft\\Windows\\Dwm", name: "OverlayTestMode", equals: "5" },
   ulps: { type: "reg", path: "HKLM\\SYSTEM\\CurrentControlSet\\Services\\amdkmdag", name: "EnableUlps", equals: "0" },
   shadercache: { type: "reg", path: "HKLM\\SYSTEM\\CurrentControlSet\\Services\\amdkmdag", name: "ShaderCache", equals: "2" },
   ntfsaccess: { type: "reg", path: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\FileSystem", name: "NtfsDisableLastAccessUpdate", equals: "1" },
   netthrottle: { type: "reg", path: MMCSS, name: "NetworkThrottlingIndex", equals: "4294967295" },
+  gamemode: { type: "reg", path: "HKCU\\Software\\Microsoft\\GameBar", name: "AutoGameModeEnabled", equals: "1" },
+  dicas: { type: "reg", path: "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager", name: "SystemPaneSuggestionsEnabled", equals: "0" },
+  notifsug: { type: "reg", path: "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Notifications\\Settings\\Windows.SystemToast.Suggested", name: "Enabled", equals: "0" },
+  explorerui: { type: "reg", path: "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", name: "LaunchTo", equals: "1" },
   prioforeground: { type: "reg", path: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl", name: "Win32PrioritySeparation", equals: "38" },
 };
 
