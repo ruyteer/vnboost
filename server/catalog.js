@@ -155,16 +155,23 @@ const TWEAKS = [
     note: "Reduz latencia de pacotes pequenos. Reverter restaura o padrao." },
 
   // ---------------- WINDOWS ----------------
+  // Plano de energia proprio: duplica o Ultimate Performance num GUID fixo
+  // nosso (da pra renomear/ativar de forma deterministica), batiza de
+  // "VN BOOST" e desativa o idle do processador.
   { id: "energia", cat: "windows", name: "Otimizar Energia",
-    desc: "Cria/ativa plano de Alto Desempenho e desativa o idle do processador.",
+    desc: "Cria e ativa o plano de energia VN BOOST (desempenho maximo) e desativa o idle do processador.",
     cmds: [
-      "powercfg -duplicatescheme e9a42b02-d5df-448d-aa00-03f14749eb61",
-      "powercfg /setacvalueindex SCHEME_CURRENT SUB_PROCESSOR IdleDisable 0",
-      "powercfg /setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PROCTHROTTLEMAX 100",
-      "powercfg /setactive SCHEME_CURRENT",
+      "powercfg /duplicatescheme e9a42b02-d5df-448d-aa00-03f14749eb61 564e424f-4f53-5400-b057-e11d2a000001",
+      'powercfg /changename 564e424f-4f53-5400-b057-e11d2a000001 "VN BOOST" "Fornece desempenho máximo para computadores de última geração."',
+      "powercfg /setacvalueindex 564e424f-4f53-5400-b057-e11d2a000001 SUB_PROCESSOR IdleDisable 0",
+      "powercfg /setacvalueindex 564e424f-4f53-5400-b057-e11d2a000001 SUB_PROCESSOR PROCTHROTTLEMAX 100",
+      "powercfg /setactive 564e424f-4f53-5400-b057-e11d2a000001",
     ],
-    revert: ["powercfg /setactive 381b4222-f694-41f0-9685-ff5bb260df2e"],
-    note: "Reverter volta ao plano Balanceado." },
+    revert: [
+      "powercfg /setactive 381b4222-f694-41f0-9685-ff5bb260df2e",
+      "powercfg /delete 564e424f-4f53-5400-b057-e11d2a000001",
+    ],
+    note: "Cria o plano \"VN BOOST\" nas opcoes de energia. Reverter volta ao Balanceado e apaga o plano." },
 
   { id: "efeitos", cat: "windows", name: "Desat. Efeitos Visuais",
     desc: "Desliga animacoes, transparencia e efeitos para ganhar desempenho.",
@@ -510,6 +517,7 @@ const PROBES = {
   hags: { type: "reg", path: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers", name: "HwSchMode", equals: "2" },
   fse: { type: "reg", path: "HKCU\\System\\GameConfigStore", name: "GameDVR_FSEBehaviorMode", equals: "2" },
   efeitos: { type: "reg", path: "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VisualEffects", name: "VisualFXSetting", equals: "2" },
+  energia: { type: "cmd", run: "powercfg /getactivescheme", contains: "VN BOOST" },
   appsbg: { type: "reg", path: "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\AppPrivacy", name: "LetAppsRunInBackground", equals: "2" },
   widgets: { type: "reg", path: "HKLM\\SOFTWARE\\Policies\\Microsoft\\Dsh", name: "AllowNewsAndInterests", equals: "0" },
   copilot: { type: "reg", path: "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsCopilot", name: "TurnOffWindowsCopilot", equals: "1" },
