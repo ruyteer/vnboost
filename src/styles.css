@@ -271,3 +271,82 @@ body {
 .dash-head { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
 .btn-sm { padding: 8px 12px; font-size: 11px; }
 .btn-sm svg { width: 14px; height: 14px; }
+
+/* ==========================================================================
+   PLANOS — FULL (vermelho, padrão) x PRECISION "PVP EDITION" (ciano)
+   A edição PVP troca o acento da interface inteira via variáveis.
+   ========================================================================== */
+.plan-badge { -webkit-app-region: no-drag; font-size: 9px; font-weight: 800; letter-spacing: 1.5px;
+  padding: 3px 10px; border-radius: 20px; background: rgba(225,6,0,0.14); color: var(--red-2);
+  border: 1px solid rgba(225,6,0,0.35); }
+.plan-badge.pvp { background: rgba(0,200,255,0.10); color: #4fdcff; border-color: rgba(0,200,255,0.35); }
+
+body.plan-precision {
+  --red: #00c8ff; --red-2: #4fdcff; --red-glow: rgba(0,200,255,0.45); --line-red: #0e3340;
+  background:
+    radial-gradient(1100px 500px at 80% -10%, rgba(0,200,255,0.13), transparent 60%),
+    radial-gradient(800px 400px at -5% 110%, rgba(0,200,255,0.08), transparent 55%),
+    var(--bg);
+}
+body.plan-precision .btn-primary,
+body.plan-precision .apply,
+body.plan-precision .run:not(.card-action .run) {
+  background: linear-gradient(135deg, #00b3e6, #006a99); border-color: #00c8ff; color: #fff;
+  box-shadow: 0 6px 20px -6px var(--red-glow);
+}
+body.plan-precision .pulse { background: var(--red); box-shadow: 0 0 8px var(--red); }
+
+/* tag do plano no card de licença */
+.tag.pvp { background: rgba(0,200,255,0.13); color: #4fdcff; }
+
+/* ---------- HERO · PVP EDITION ---------- */
+.pvp-hero { position: relative; display: flex; gap: 28px; align-items: center; overflow: hidden;
+  background:
+    radial-gradient(600px 280px at 85% -20%, rgba(0,200,255,0.16), transparent 60%),
+    linear-gradient(180deg, var(--panel), var(--bg-2));
+  border: 1px solid var(--line); border-radius: 18px; padding: 34px 34px; margin-top: 18px; }
+.pvp-hero::after { content: ""; position: absolute; right: -60px; top: 50%; transform: translateY(-50%);
+  width: 340px; height: 340px; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, rgba(0,200,255,0.10) 0%, transparent 65%);
+  border: 1px dashed rgba(0,200,255,0.18); }
+.pvp-hero-main { flex: 1; min-width: 0; position: relative; z-index: 1; }
+.pvp-badge { display: inline-flex; align-items: center; gap: 7px; font-size: 10px; font-weight: 800;
+  letter-spacing: 2.5px; color: #4fdcff; background: rgba(0,200,255,0.10);
+  border: 1px solid rgba(0,200,255,0.30); border-radius: 20px; padding: 6px 14px; }
+.pvp-badge svg { width: 13px; height: 13px; }
+.pvp-title { margin-top: 16px; font-size: 42px; font-weight: 900; font-style: italic;
+  letter-spacing: -1px; line-height: 1; color: #fff; }
+.pvp-title span { color: var(--red-2); text-shadow: 0 0 24px var(--red-glow); }
+.pvp-sub { margin-top: 12px; max-width: 520px; color: var(--muted); font-size: 13.5px; line-height: 1.65; }
+.pvp-actions { display: flex; gap: 10px; margin-top: 22px; flex-wrap: wrap; }
+.pvp-cta { padding: 14px 26px; font-size: 13px; letter-spacing: 1.2px; display: inline-flex;
+  align-items: center; gap: 9px; border-radius: 11px; }
+.pvp-cta svg { width: 16px; height: 16px; }
+
+.pvp-hero-side { position: relative; z-index: 1; display: flex; flex-direction: column;
+  align-items: center; gap: 12px; flex-shrink: 0; padding-right: 8px; }
+.pvp-ring { width: 132px; height: 132px; border-radius: 50%; display: grid; place-items: center;
+  background: conic-gradient(var(--red) 0%, #1d1d24 0); transition: background 0.6s ease;
+  box-shadow: 0 0 30px -8px var(--red-glow); }
+.pvp-ring-in { width: 106px; height: 106px; border-radius: 50%; background: var(--bg-2);
+  border: 1px solid var(--line); display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 2px; }
+.pvp-ring-in b { font-size: 26px; font-weight: 800; color: #fff; }
+.pvp-ring-in span { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+.pvp-count { font-size: 11px; color: var(--muted); }
+
+/* chips do pacote */
+.pvp-chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+.pvp-chip { display: flex; gap: 13px; align-items: flex-start; background: linear-gradient(180deg, var(--panel), var(--bg-2));
+  border: 1px solid var(--line); border-radius: 13px; padding: 15px 16px; transition: 0.16s; }
+.pvp-chip:hover { border-color: var(--line-red); transform: translateY(-2px); }
+.pvp-chip svg { width: 19px; height: 19px; color: var(--red-2); flex-shrink: 0; margin-top: 2px; }
+.pvp-chip b { display: block; font-size: 13px; color: #fff; }
+.pvp-chip span { display: block; font-size: 11.5px; color: var(--muted); margin-top: 3px; line-height: 1.45; }
+
+.pvp-shortcuts { grid-template-columns: repeat(2, 1fr); }
+
+/* nav ativo na edição PVP (o gradiente padrão é rgba vermelho fixo) */
+body.plan-precision .nav-item.active {
+  background: linear-gradient(135deg, rgba(0,200,255,0.16), rgba(0,200,255,0.04));
+}

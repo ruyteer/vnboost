@@ -83,6 +83,8 @@
   .tag-active{background:rgba(40,200,64,.15);color:var(--green)}
   .tag-revoked{background:rgba(225,6,0,.15);color:var(--red2)}
   .tag-unbound{background:rgba(254,188,46,.13);color:var(--yellow)}
+  .tag-full{background:rgba(225,6,0,.15);color:var(--red2)}
+  .tag-precision{background:rgba(0,200,255,.13);color:#4fdcff}
   .hwid{max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:middle;color:var(--muted)}
   .actions{display:flex;gap:6px}
   .ico-btn{padding:7px;border-radius:8px}
@@ -137,11 +139,14 @@
       <div class="card-head"><i data-lucide="plus-circle"></i> Criar nova chave</div>
       <div class="field">
         <input id="cNote" placeholder="Nota (ex: cliente João)" style="flex:1;min-width:200px" />
-        <select id="cPlan"><option value="standard">standard</option><option value="vip">vip</option><option value="lifetime">lifetime</option></select>
+        <select id="cPlan">
+          <option value="full">FULL — mira + otimização</option>
+          <option value="precision">PRECISION — só mira (PVP)</option>
+        </select>
         <input id="cDays" type="number" min="0" placeholder="Dias (vazio = sem expirar)" style="width:210px" />
         <button class="btn-primary" id="createBtn"><i data-lucide="sparkles"></i> Gerar chave</button>
       </div>
-      <p class="hint">A chave nasce solta e vincula no 1º uso ao HWID do cliente.</p>
+      <p class="hint">A chave nasce solta e vincula no 1º uso ao HWID do cliente. <b>FULL</b> libera o painel completo; <b>PRECISION</b> libera só as features de mira (edição PVP).</p>
     </div>
 
     <div class="card">
@@ -179,6 +184,10 @@ function statusTag(l){
   if(!l.hwid) return '<span class="tag tag-unbound">não usada</span>';
   return '<span class="tag tag-active">ativa</span>';
 }
+function planTag(p){
+  const prec=(p||"").toLowerCase()==="precision";
+  return prec ? '<span class="tag tag-precision">PRECISION</span>' : '<span class="tag tag-full">FULL</span>';
+}
 async function load(){
   const d=await api("/api/admin/keys"); const list=d.licenses||[];
   $("#stTotal").textContent=list.length;
@@ -194,7 +203,7 @@ async function load(){
       <td>${statusTag(l)}</td>
       <td>${l.hwid?`<span class="hwid" title="${l.hwid}">${l.hwid}</span>`:"—"}</td>
       <td>${l.note||"—"}</td>
-      <td>${l.plan||"—"}</td>
+      <td>${planTag(l.plan)}</td>
       <td>${l.expires_at?fmt(l.expires_at):"nunca"}</td>
       <td>${fmt(l.last_seen)}</td>
       <td><div class="actions">

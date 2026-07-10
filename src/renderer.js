@@ -61,8 +61,48 @@ function go(screen) {
 function handleResult(res, okMsg) {
   if (res && res.ok) { if (okMsg) notify(okMsg, "ok"); return true; }
   if (res && res.offline) { notify("Sem conexão com o servidor.", "warn"); return false; }
+  if (res && res.locked && res.reason === "plan") { notify("Recurso exclusivo da key FULL. Fale com o suporte pra fazer upgrade.", "warn"); return false; }
   if (res && res.locked) { notify("Licença inválida/revogada — acesso bloqueado.", "warn"); showLock(res.reason); return false; }
   notify("Falha na operação.", "warn"); return false;
+}
+
+// ---------------- plano da key (full x precision) ----------------
+// O servidor é a autoridade: o catálogo já vem filtrado e as ações fora do
+// plano são negadas lá. Aqui a gente só adapta a interface.
+let PLAN = "full";
+function applyPlan(plan) {
+  PLAN = plan === "precision" ? "precision" : "full";
+  const prec = PLAN === "precision";
+  document.body.classList.toggle("plan-precision", prec);
+
+  // badge na titlebar
+  const badge = $("#planBadge");
+  badge.hidden = false;
+  badge.textContent = prec ? "PVP EDITION" : "FULL";
+  badge.classList.toggle("pvp", prec);
+
+  // esconde as abas exclusivas do full
+  document.querySelectorAll('[data-planonly="full"]').forEach((el) => (el.hidden = prec));
+
+  // na edição PVP, a aba FiveM vira "Crosshair" (cache de FiveM é do full)
+  const nf = $("#navFivem");
+  nf.innerHTML = prec ? '<i data-lucide="crosshair"></i> Crosshair' : '<i data-lucide="rocket"></i> FiveM';
+  const fmTitle = document.querySelector("#screen-fivem .screen-title");
+  if (fmTitle) fmTitle.textContent = prec ? "Crosshair" : "FiveM";
+  const cacheTab = document.querySelector('.subtab[data-sub="cache"]');
+  const xhairTab = document.querySelector('.subtab[data-sub="xhair"]');
+  if (cacheTab && xhairTab) { cacheTab.hidden = prec; (prec ? xhairTab : cacheTab).click(); }
+
+  // dashboard: hero PVP x painel completo
+  $("#dashFull").hidden = prec;
+  $("#dashPrecision").hidden = !prec;
+
+  // se estiver numa tela que não existe no plano, volta pro dashboard
+  if (prec) {
+    const active = document.querySelector(".screen.active");
+    if (active && ["screen-windows", "screen-jogos", "screen-system"].includes(active.id)) go("dashboard");
+  }
+  if (window.lucide) lucide.createIcons();
 }
 
 // ---------------- estado (switches) ----------------
@@ -76,6 +116,11 @@ async function refreshStatus() {
     const total = st.total || 0;
     const pct = total > 0 ? Math.round((n / total) * 100) : 0;
     const el = $("#activePct"); if (el) el.textContent = pct + "%";
+    // hero da edição PVP
+    const pp = $("#pvpPct"), pc = $("#pvpCount"), pr = $("#pvpRing");
+    if (pp) pp.textContent = pct + "%";
+    if (pc) pc.textContent = total > 0 ? `${n} de ${total} tweaks ativos` : "—";
+    if (pr) pr.style.background = `conic-gradient(var(--red) ${pct}%, #1d1d24 0)`;
   } catch (e) {}
 }
 
@@ -157,13 +202,15 @@ async function loadCatalog() {
     else showLock(cat && cat.reason);
     return;
   }
+  // o plano que vale é o que o servidor mandou junto do catálogo
+  if (cat.plan) applyPlan(cat.plan);
   const grids = { precision: gp, system: gs };
   cat.tweaks.forEach((t) => grids[t.cat] && grids[t.cat].appendChild(makeCard(t)));
   buildWindows(cat.tweaks.filter((t) => t.cat === "windows"));
   (cat.games || []).forEach((g) => gl.appendChild(makeGameCard(g)));
   $("#gameCount").textContent = `${(cat.games || []).length} jogos`;
   await refreshStatus();
-  log(`Catálogo carregado: ${cat.tweaks.length} tweaks + ${(cat.games || []).length} jogos.`);
+  log(`Catálogo carregado: ${cat.tweaks.length} tweaks + ${(cat.games || []).length} jogos (plano ${PLAN}).`);
 }
 
 // ---------------- licença ----------------
@@ -191,8 +238,18 @@ async function renderLicCard(st) {
   const tag = $("#licStatus");
   if (st && st.licensed) { tag.className = "tag ok"; tag.textContent = st.mode === "offline" ? "ativa (offline)" : "ativa"; }
   else { tag.className = "tag bad"; tag.textContent = "inativa"; }
+  const plan = (st && st.plan) || (cur && cur.plan) || null;
+  const planEl = $("#licPlan");
+  if (plan === "precision") { planEl.className = "tag pvp"; planEl.textContent = "PRECISION (PVP)"; }
+  else if (plan) { planEl.className = "tag ok"; planEl.textContent = "FULL"; }
+  else { planEl.className = "tag"; planEl.textContent = "—"; }
 }
-async function unlock(st) { $("#lockScreen").hidden = true; await renderLicCard(st); await loadCatalog(); }
+async function unlock(st) {
+  $("#lockScreen").hidden = true;
+  applyPlan((st && st.plan) || "full");
+  await renderLicCard(st);
+  await loadCatalog();
+}
 
 async function initLicense() {
   HWID = await window.api.licenseHwid();
@@ -217,6 +274,9 @@ async function initLicense() {
   $("#licDeactivate").addEventListener("click", async () => {
     if (!confirm("Desativar a licença neste app?")) return;
     await window.api.licenseDeactivate(); $("#lockKey").value = ""; showLock("no_key");
+    // volta o visual pro neutro até a próxima ativação dizer o plano
+    document.body.classList.remove("plan-precision");
+    $("#planBadge").hidden = true;
     await renderLicCard({ licensed: false }); notify("Licença desativada neste PC.", "info");
   });
 }
@@ -348,7 +408,7 @@ function setupFivem() {
 // ---------------- init ----------------
 async function init() {
   document.querySelectorAll(".nav-item").forEach((n) => n.addEventListener("click", () => go(n.dataset.screen)));
-  document.querySelectorAll(".shortcut").forEach((s) => s.addEventListener("click", () => go(s.dataset.go)));
+  document.querySelectorAll("[data-go]").forEach((s) => s.addEventListener("click", () => go(s.dataset.go)));
 
   const perfActions = {
     precision: async () => { if (handleResult(await window.api.applyAll("precision"), "Precision Fix ativado.")) await refreshStatus(); },
@@ -357,6 +417,10 @@ async function init() {
     ping: async () => handleResult(await window.api.apply("ping"), "Ping otimizado."),
   };
   document.querySelectorAll(".perf-btn").forEach((b) => b.addEventListener("click", () => withBusy(perfActions[b.dataset.perf])));
+
+  // CTA do hero da edição PVP
+  const pvpBtn = $("#pvpActivate");
+  if (pvpBtn) pvpBtn.addEventListener("click", () => withBusy(perfActions.precision));
 
   document.querySelectorAll("[data-applyall]").forEach((b) => b.addEventListener("click", () =>
     withBusy(async () => { if (handleResult(await window.api.applyAll(b.dataset.applyall), `Aplicado tudo: ${b.dataset.applyall}`)) await refreshStatus(); })));

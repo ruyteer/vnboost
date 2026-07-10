@@ -15,6 +15,7 @@
       <button id="tlMax" class="dot dot-max" title="Maximizar"></button>
     </div>
     <div class="titlebar-id">VN BOOST <span id="appVer">v1.1</span></div>
+    <span id="planBadge" class="plan-badge" hidden></span>
     <div class="titlebar-spacer"></div>
   </div>
 
@@ -47,10 +48,10 @@
       <nav class="nav">
         <button class="nav-item active" data-screen="dashboard"><i data-lucide="layout-dashboard"></i> Dashboard</button>
         <button class="nav-item" data-screen="precision"><i data-lucide="crosshair"></i> PrecisionFix</button>
-        <button class="nav-item" data-screen="windows"><i data-lucide="monitor"></i> Windows</button>
-        <button class="nav-item" data-screen="jogos"><i data-lucide="gamepad-2"></i> Jogos</button>
-        <button class="nav-item" data-screen="fivem"><i data-lucide="rocket"></i> FiveM</button>
-        <button class="nav-item" data-screen="system"><i data-lucide="wrench"></i> Sistema</button>
+        <button class="nav-item" data-screen="windows" data-planonly="full"><i data-lucide="monitor"></i> Windows</button>
+        <button class="nav-item" data-screen="jogos" data-planonly="full"><i data-lucide="gamepad-2"></i> Jogos</button>
+        <button class="nav-item" data-screen="fivem" id="navFivem"><i data-lucide="rocket"></i> FiveM</button>
+        <button class="nav-item" data-screen="system" data-planonly="full"><i data-lucide="wrench"></i> Sistema</button>
         <button class="nav-item" data-screen="notifs"><i data-lucide="bell"></i> Notificações <span id="notifBadge" class="badge" hidden>0</span></button>
         <div class="nav-sep"></div>
         <button class="nav-item" data-screen="config"><i data-lucide="settings"></i> Configurações</button>
@@ -66,6 +67,52 @@
             <h2 class="screen-title">Dashboard</h2>
             <button id="restorePoint" class="btn btn-ghost btn-sm">Criar ponto de restauração</button>
           </div>
+
+          <!-- DASHBOARD · PRECISION (PVP Edition) -->
+          <div id="dashPrecision" hidden>
+            <div class="pvp-hero">
+              <div class="pvp-hero-main">
+                <span class="pvp-badge"><i data-lucide="crosshair"></i> PVP EDITION</span>
+                <h1 class="pvp-title">PRECISION<span>FIX</span></h1>
+                <p class="pvp-sub">
+                  Resposta 1:1 de mouse, teclado sem atraso e timers de kernel afinados.
+                  Sem fumaça, sem enrolação — só o que muda a sua mira.
+                </p>
+                <div class="pvp-actions">
+                  <button id="pvpActivate" class="btn btn-primary pvp-cta"><i data-lucide="zap"></i> ATIVAR PRECISION FIX</button>
+                  <button class="btn btn-ghost" data-go="precision">VER TWEAKS</button>
+                </div>
+              </div>
+              <div class="pvp-hero-side">
+                <div class="pvp-ring" id="pvpRing">
+                  <div class="pvp-ring-in">
+                    <b id="pvpPct">0%</b>
+                    <span>ativo</span>
+                  </div>
+                </div>
+                <div class="pvp-count" id="pvpCount">—</div>
+              </div>
+            </div>
+
+            <h3 class="section-h">O que vem no pacote</h3>
+            <div class="pvp-chips">
+              <div class="pvp-chip"><i data-lucide="mouse-pointer-2"></i><div><b>Mouse 1:1</b><span>Curva MarkC crua, zero aceleração</span></div></div>
+              <div class="pvp-chip"><i data-lucide="keyboard"></i><div><b>Teclado instantâneo</b><span>Sem delay de repetição e filtros</span></div></div>
+              <div class="pvp-chip"><i data-lucide="timer"></i><div><b>Timers 0.5ms</b><span>Tick do kernel afinado pra input</span></div></div>
+              <div class="pvp-chip"><i data-lucide="wifi"></i><div><b>Rede PVP</b><span>Nagle OFF — hit reg consistente</span></div></div>
+              <div class="pvp-chip"><i data-lucide="monitor-play"></i><div><b>GPU sem fila</b><span>HAGS, MMCSS e fullscreen otimizado</span></div></div>
+              <div class="pvp-chip"><i data-lucide="crosshair"></i><div><b>Crosshair Studio</b><span>Monte, visualize e copie sua mira</span></div></div>
+            </div>
+
+            <h3 class="section-h">Atalhos</h3>
+            <div class="shortcuts pvp-shortcuts">
+              <button class="shortcut" data-go="precision"><b>PrecisionFix</b><span>Tweaks de mira e input</span></button>
+              <button class="shortcut" data-go="fivem"><b>Crosshair</b><span>Monte e copie sua mira</span></button>
+            </div>
+          </div>
+
+          <!-- DASHBOARD · FULL -->
+          <div id="dashFull">
           <div class="metrics">
             <div class="metric">
               <div class="metric-top"><span>CPU</span><span id="cpuPct" class="metric-val">--%</span></div>
@@ -110,6 +157,7 @@
             <button class="perf-btn" data-perf="cache"><i data-lucide="trash-2"></i> Limpar Cache do Windows</button>
             <button class="perf-btn" data-perf="ping"><i data-lucide="wifi"></i> Melhorar Ping</button>
           </div>
+          </div><!-- /dashFull -->
         </section>
 
         <!-- PRECISION -->
@@ -241,6 +289,7 @@
                 <span id="licStatus" class="tag">—</span>
               </div>
               <div class="lic-row"><span>Chave</span><code id="licKey">—</code></div>
+              <div class="lic-row"><span>Plano</span><span id="licPlan" class="tag">—</span></div>
               <div class="lic-row"><span>Expira</span><span id="licExpires">—</span></div>
               <div class="lic-row"><span>HWID</span><code id="licHwid" class="lic-hwid">—</code>
                 <button id="licCopyHwid" class="btn-mini">copiar</button></div>

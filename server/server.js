@@ -62,12 +62,12 @@ app.post("/api/activate", async (req, res) => {
   if (!lic.hwid) {
     await query("UPDATE licenses SET hwid=$1, activated_at=now(), last_seen=now(), last_ip=$2 WHERE id=$3", [hwid, ip, lic.id]);
     await logActivation(lic.id, hwid, ip, true, "bound");
-    return res.json({ ok: true, expiresAt: lic.expires_at, plan: lic.plan, bound: true });
+    return res.json({ ok: true, expiresAt: lic.expires_at, plan: catalog.normalizePlan(lic.plan), bound: true });
   }
   if (lic.hwid !== hwid) { await logActivation(lic.id, hwid, ip, false, "hwid_mismatch"); return res.json({ ok: false, reason: "hwid_mismatch" }); }
   await query("UPDATE licenses SET last_seen=now(), last_ip=$1 WHERE id=$2", [ip, lic.id]);
   await logActivation(lic.id, hwid, ip, true, "ok");
-  res.json({ ok: true, expiresAt: lic.expires_at, plan: lic.plan });
+  res.json({ ok: true, expiresAt: lic.expires_at, plan: catalog.normalizePlan(lic.plan) });
 });
 
 // ---------- public: validate ----------
@@ -75,32 +75,37 @@ app.post("/api/validate", async (req, res) => {
   const { key, hwid } = req.body || {};
   const r = await authLicense(key, hwid, ipOf(req));
   if (!r.ok) return res.json({ ok: false, reason: r.reason });
-  res.json({ ok: true, expiresAt: r.lic.expires_at, plan: r.lic.plan });
+  res.json({ ok: true, expiresAt: r.lic.expires_at, plan: catalog.normalizePlan(r.lic.plan) });
 });
 
-// ---------- protegido: catalogo (so com licenca valida) ----------
+// ---------- protegido: catalogo (filtrado pelo plano da key) ----------
 app.post("/api/catalog", async (req, res) => {
   const { key, hwid } = req.body || {};
   const r = await authLicense(key, hwid, ipOf(req));
   if (!r.ok) return res.json({ ok: false, reason: r.reason });
-  res.json({ ok: true, tweaks: catalog.metaList(), games: catalog.gameNames() });
+  const plan = catalog.normalizePlan(r.lic.plan);
+  res.json({ ok: true, plan, tweaks: catalog.metaList(plan), games: catalog.gameNames(plan) });
 });
 
 // ---------- protegido: instrucao de uma acao (apply|revert) ----------
+// O plano e checado AQUI tambem: mesmo que alguem force o id pelo client,
+// uma key precision nunca recebe instrucao de tweak fora do plano.
 app.post("/api/action", async (req, res) => {
   const { key, hwid, id, op } = req.body || {};
   const r = await authLicense(key, hwid, ipOf(req));
   if (!r.ok) return res.json({ ok: false, reason: r.reason });
+  if (!catalog.allowedForPlan(r.lic.plan, id)) return res.json({ ok: false, reason: "plan" });
   const instr = catalog.instruction(id, op === "revert" ? "revert" : "apply");
   if (!instr) return res.json({ ok: false, reason: "unknown_action" });
   res.json({ ok: true, instruction: instr });
 });
 
-// ---------- protegido: exes de um jogo ----------
+// ---------- protegido: exes de um jogo (so no plano full) ----------
 app.post("/api/game", async (req, res) => {
   const { key, hwid, name } = req.body || {};
   const r = await authLicense(key, hwid, ipOf(req));
   if (!r.ok) return res.json({ ok: false, reason: r.reason });
+  if (catalog.normalizePlan(r.lic.plan) !== "full") return res.json({ ok: false, reason: "plan" });
   const exes = catalog.gameExes(name);
   if (!exes) return res.json({ ok: false, reason: "unknown_game" });
   res.json({ ok: true, exes });
@@ -110,8 +115,10 @@ app.post("/api/game", async (req, res) => {
 app.post("/api/admin/keys", adminAuth, async (req, res) => {
   const { note, plan, expiresAt, hwid } = req.body || {};
   const key = genKey();
+  // So existem 2 modelos de key: full (tudo) e precision (so mira/PVP).
+  const p = catalog.normalizePlan(plan);
   const r = await query("INSERT INTO licenses (key, note, plan, expires_at, hwid) VALUES ($1,$2,$3,$4,$5) RETURNING *",
-    [key, note || null, plan || "standard", expiresAt || null, hwid || null]);
+    [key, note || null, p, expiresAt || null, hwid || null]);
   res.json({ ok: true, license: r.rows[0] });
 });
 app.get("/api/admin/keys", adminAuth, async (_req, res) => {

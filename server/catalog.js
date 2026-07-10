@@ -504,15 +504,35 @@ const PROBES = {
   prioforeground: { type: "reg", path: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl", name: "Win32PrioritySeparation", equals: "38" },
 };
 
-// ---- acessores ----
-function metaList() {
-  return TWEAKS.map((t) => ({
-    id: t.id, cat: t.cat, name: t.name, desc: t.desc,
-    action: !!t.action, confirm: t.confirm || null, note: t.note || null,
-    probe: PROBES[t.id] || null, sub: SUBS[t.id] || null,
-  }));
+// ===========================================================================
+// PLANOS
+//   full      -> tudo (precision + windows + system + jogos)
+//   precision -> so a aba PrecisionFix (features de mira/input, pro PVP)
+// Keys antigas ('standard', 'vip', etc.) contam como full.
+// ===========================================================================
+function normalizePlan(plan) {
+  return String(plan || "").trim().toLowerCase() === "precision" ? "precision" : "full";
 }
-function gameNames() { return GAMES.map((g) => ({ name: g.name })); }
+const PRECISION_IDS = new Set(TWEAKS.filter((t) => t.cat === "precision").map((t) => t.id));
+function allowedForPlan(plan, id) {
+  return normalizePlan(plan) === "full" || PRECISION_IDS.has(id);
+}
+
+// ---- acessores ----
+function metaList(plan) {
+  const p = normalizePlan(plan);
+  return TWEAKS
+    .filter((t) => p === "full" || t.cat === "precision")
+    .map((t) => ({
+      id: t.id, cat: t.cat, name: t.name, desc: t.desc,
+      action: !!t.action, confirm: t.confirm || null, note: t.note || null,
+      probe: PROBES[t.id] || null, sub: SUBS[t.id] || null,
+    }));
+}
+function gameNames(plan) {
+  if (normalizePlan(plan) !== "full") return [];
+  return GAMES.map((g) => ({ name: g.name }));
+}
 function instruction(id, op) {
   const t = TWEAKS.find((x) => x.id === id);
   if (!t) return null;
@@ -524,4 +544,4 @@ function gameExes(name) {
   return g ? g.exes : null;
 }
 
-module.exports = { metaList, gameNames, instruction, gameExes };
+module.exports = { metaList, gameNames, instruction, gameExes, normalizePlan, allowedForPlan };
