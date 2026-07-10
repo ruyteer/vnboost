@@ -285,16 +285,8 @@ body {
 .tag.pvp { background: rgba(225,6,0,0.15); color: var(--red-2); }
 
 /* ---------- HERO · PVP EDITION ---------- */
-.pvp-hero { position: relative; display: flex; gap: 28px; align-items: center; overflow: hidden;
-  background:
-    radial-gradient(600px 280px at 85% -20%, rgba(225,6,0,0.16), transparent 60%),
-    linear-gradient(180deg, var(--panel), var(--bg-2));
-  border: 1px solid var(--line); border-radius: 18px; padding: 34px 34px; margin-top: 18px; }
-.pvp-hero::after { content: ""; position: absolute; right: -60px; top: 50%; transform: translateY(-50%);
-  width: 340px; height: 340px; border-radius: 50%; pointer-events: none;
-  background: radial-gradient(circle, rgba(225,6,0,0.10) 0%, transparent 65%);
-  border: 1px dashed rgba(225,6,0,0.20); }
-.pvp-hero-main { flex: 1; min-width: 0; position: relative; z-index: 1; }
+.pvp-hero { display: flex; gap: 28px; align-items: center; padding: 26px 4px 18px; }
+.pvp-hero-main { flex: 1; min-width: 0; }
 .pvp-badge { display: inline-flex; align-items: center; gap: 7px; font-size: 10px; font-weight: 800;
   letter-spacing: 2.5px; color: var(--red-2); background: rgba(225,6,0,0.10);
   border: 1px solid rgba(225,6,0,0.30); border-radius: 20px; padding: 6px 14px; }

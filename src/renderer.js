@@ -81,17 +81,8 @@ function applyPlan(plan) {
   badge.textContent = prec ? "PVP EDITION" : "FULL";
   badge.classList.toggle("pvp", prec);
 
-  // esconde as abas exclusivas do full
+  // esconde as abas exclusivas do full (fica só Dashboard, PrecisionFix e Config)
   document.querySelectorAll('[data-planonly="full"]').forEach((el) => (el.hidden = prec));
-
-  // na edição PVP, a aba FiveM vira "Crosshair" (cache de FiveM é do full)
-  const nf = $("#navFivem");
-  nf.innerHTML = prec ? '<i data-lucide="crosshair"></i> Crosshair' : '<i data-lucide="rocket"></i> FiveM';
-  const fmTitle = document.querySelector("#screen-fivem .screen-title");
-  if (fmTitle) fmTitle.textContent = prec ? "Crosshair" : "FiveM";
-  const cacheTab = document.querySelector('.subtab[data-sub="cache"]');
-  const xhairTab = document.querySelector('.subtab[data-sub="xhair"]');
-  if (cacheTab && xhairTab) { cacheTab.hidden = prec; (prec ? xhairTab : cacheTab).click(); }
 
   // dashboard: hero PVP x painel completo
   $("#dashFull").hidden = prec;
@@ -100,7 +91,7 @@ function applyPlan(plan) {
   // se estiver numa tela que não existe no plano, volta pro dashboard
   if (prec) {
     const active = document.querySelector(".screen.active");
-    if (active && ["screen-windows", "screen-jogos", "screen-system"].includes(active.id)) go("dashboard");
+    if (active && ["screen-windows", "screen-jogos", "screen-system", "screen-fivem", "screen-notifs"].includes(active.id)) go("dashboard");
   }
   if (window.lucide) lucide.createIcons();
 }
