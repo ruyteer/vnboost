@@ -176,12 +176,36 @@ const TWEAKS = [
     ] },
 
   { id: "appsbg", cat: "windows", name: "Desat. Apps 2o Plano",
-    desc: "Impede aplicativos de rodarem em segundo plano.",
+    desc: "Impede aplicativos de rodarem em segundo plano (usuario + politica de sistema).",
     reg: [
+      // Politica de maquina (force deny) - vale pra todos os usuarios.
+      { path: "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\AppPrivacy", name: "LetAppsRunInBackground", type: "REG_DWORD", data: "2" },
       { path: "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\BackgroundAccessApplications", name: "GlobalUserDisabled", type: "REG_DWORD", data: "1" },
       { path: "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", name: "Start_TrackProgs", type: "REG_DWORD", data: "0" },
       { path: "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Search", name: "BackgroundAppGlobalToggle", type: "REG_DWORD", data: "0" },
     ] },
+
+  { id: "widgets", cat: "windows", name: "Desat. Widgets",
+    desc: "Desliga os Widgets (noticias/interesses) da barra de tarefas e encerra os processos deles.",
+    reg: [
+      { path: "HKLM\\SOFTWARE\\Microsoft\\PolicyManager\\default\\NewsAndInterests\\AllowNewsAndInterests", name: "value", type: "REG_DWORD", data: "0" },
+      { path: "HKLM\\SOFTWARE\\Policies\\Microsoft\\Dsh", name: "AllowNewsAndInterests", type: "REG_DWORD", data: "0" },
+    ],
+    cmds: ["taskkill /f /im Widgets.exe", "taskkill /f /im WidgetService.exe"],
+    note: "Precisa reiniciar pra sumir da barra de tarefas." },
+
+  { id: "copilot", cat: "windows", name: "Desat. Copilot",
+    desc: "Desativa o Windows Copilot via politica (usuario + maquina).",
+    reg: [
+      { path: "HKCU\\Software\\Policies\\Microsoft\\Windows\\WindowsCopilot", name: "TurnOffWindowsCopilot", type: "REG_DWORD", data: "1" },
+      { path: "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsCopilot", name: "TurnOffWindowsCopilot", type: "REG_DWORD", data: "1" },
+    ],
+    note: "Precisa reiniciar (ou sair e entrar da conta) pra sumir da barra." },
+
+  { id: "svchostsplit", cat: "windows", name: "Menos Processos do Windows",
+    desc: "Agrupa servicos do Windows em menos processos svchost (limite ajustado pra RAM da maquina).",
+    special: "svchostsplit",
+    note: "Precisa reiniciar o PC para valer." },
 
   { id: "servicos", cat: "windows", name: "Desat. Servicos Inuteis",
     desc: "Desativa WerSvc, DiagTrack, dmwappushservice, WbioSrvc e Spooler.",
@@ -461,7 +485,9 @@ const SUBS = {
   netthrottle: "Rede", tcplatency: "Rede",
   telemetria: "Privacidade", cortana: "Privacidade", gamebar: "Privacidade",
   werror: "Privacidade", menuiniciar: "Privacidade", appsbg: "Privacidade",
+  widgets: "Privacidade", copilot: "Privacidade",
   efeitos: "Sistema", indexacao: "Sistema", servicos: "Sistema", ntfsaccess: "Sistema",
+  svchostsplit: "Sistema",
   amdoverlay: "GPU",
   gamemode: "Desempenho", dicas: "Privacidade", notifsug: "Privacidade", explorerui: "Sistema",
 };
@@ -484,7 +510,11 @@ const PROBES = {
   hags: { type: "reg", path: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers", name: "HwSchMode", equals: "2" },
   fse: { type: "reg", path: "HKCU\\System\\GameConfigStore", name: "GameDVR_FSEBehaviorMode", equals: "2" },
   efeitos: { type: "reg", path: "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VisualEffects", name: "VisualFXSetting", equals: "2" },
-  appsbg: { type: "reg", path: "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\BackgroundAccessApplications", name: "GlobalUserDisabled", equals: "1" },
+  appsbg: { type: "reg", path: "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\AppPrivacy", name: "LetAppsRunInBackground", equals: "2" },
+  widgets: { type: "reg", path: "HKLM\\SOFTWARE\\Policies\\Microsoft\\Dsh", name: "AllowNewsAndInterests", equals: "0" },
+  copilot: { type: "reg", path: "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsCopilot", name: "TurnOffWindowsCopilot", equals: "1" },
+  // svchostsplit: sem probe — o valor esperado varia por máquina (RAM);
+  // o estado fica pelo backup local (aplicado pelo app = ativo).
   servicos: { type: "cmd", run: "sc qc Spooler", contains: "DISABLED" },
   gamebar: { type: "reg", path: "HKCU\\System\\GameConfigStore", name: "GameDVR_Enabled", equals: "0" },
   werror: { type: "reg", path: "HKLM\\SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting", name: "Disabled", equals: "1" },
