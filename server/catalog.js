@@ -214,24 +214,6 @@ const TWEAKS = [
     special: "svchostsplit",
     note: "Precisa reiniciar o PC para valer." },
 
-  { id: "servicos", cat: "windows", name: "Desat. Servicos Inuteis",
-    desc: "Desativa WerSvc, DiagTrack, dmwappushservice, WbioSrvc e Spooler.",
-    cmds: [
-      "sc stop WerSvc", "sc config WerSvc start= disabled",
-      "sc stop DiagTrack", "sc config DiagTrack start= disabled",
-      "sc stop dmwappushservice", "sc config dmwappushservice start= disabled",
-      "sc stop WbioSrvc", "sc config WbioSrvc start= disabled",
-      "sc stop Spooler", "sc config Spooler start= disabled",
-    ],
-    revert: [
-      "sc config WerSvc start= demand",
-      "sc config DiagTrack start= auto",
-      "sc config dmwappushservice start= demand",
-      "sc config WbioSrvc start= demand",
-      "sc config Spooler start= auto", "sc start Spooler",
-    ],
-    note: "Desativa o Spooler (impressao). Reverter religa tudo." },
-
   { id: "gamebar", cat: "windows", name: "Otimizar GameBar",
     desc: "Desliga GameDVR/Game Bar e a captura em segundo plano.",
     reg: [
@@ -245,10 +227,8 @@ const TWEAKS = [
     ] },
 
   { id: "werror", cat: "windows", name: "Desat. Relatorios de Erro",
-    desc: "Desativa o Windows Error Reporting.",
-    reg: [{ path: "HKLM\\SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting", name: "Disabled", type: "REG_DWORD", data: "1" }],
-    cmds: ["sc stop WerSvc", "sc config WerSvc start= disabled"],
-    revert: ["sc config WerSvc start= demand"] },
+    desc: "Desativa o Windows Error Reporting via registro (sem parar servico do Windows).",
+    reg: [{ path: "HKLM\\SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting", name: "Disabled", type: "REG_DWORD", data: "1" }] },
 
   { id: "telemetria", cat: "windows", name: "Desat. Telemetria",
     desc: "Bloqueia envio de dados, anuncios e conteudo de consumidor.",
@@ -259,11 +239,6 @@ const TWEAKS = [
       { path: "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\CloudContent", name: "DisableMicrosoftConsumerExperience", type: "REG_DWORD", data: "1" },
       { path: "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate", name: "DoNotConnectToWindowsUpdateInternetLocations", type: "REG_DWORD", data: "1" },
     ] },
-
-  { id: "indexacao", cat: "windows", name: "Desat. Indexacao",
-    desc: "Desativa o servico de indexacao de pesquisa (WSearch).",
-    cmds: ['net stop "Windows Search"', "sc config WSearch start= disabled"],
-    revert: ["sc config WSearch start= delayed-auto", "sc start WSearch"] },
 
   { id: "menuiniciar", cat: "windows", name: "Otimizar Menu Iniciar",
     desc: "Desliga pesquisa online/Bing e sugestoes do menu iniciar.",
@@ -297,19 +272,6 @@ const TWEAKS = [
       { path: GAMES_TASK, name: "Scheduling Category", type: "REG_SZ", data: "High" },
     ] },
 
-  { id: "ulps", cat: "windows", name: "Desativar ULPS (AMD)",
-    desc: "Desativa o ULPS da AMD (evita quedas de clock e stutter). So afeta GPU AMD.",
-    reg: [
-      { path: "HKLM\\SYSTEM\\CurrentControlSet\\Services\\amdkmdag", name: "EnableUlps", type: "REG_DWORD", data: "0" },
-      { path: "HKLM\\SYSTEM\\CurrentControlSet\\Services\\amdkmdag", name: "EnableUlps_NA", type: "REG_DWORD", data: "0" },
-    ],
-    note: "So AMD. Precisa reiniciar." },
-
-  { id: "shadercache", cat: "windows", name: "Shader Cache Sempre Ativo (AMD)",
-    desc: "Mantem o shader cache sempre ligado (menos stutter de compilacao). So GPU AMD.",
-    reg: [{ path: "HKLM\\SYSTEM\\CurrentControlSet\\Services\\amdkmdag", name: "ShaderCache", type: "REG_DWORD", data: "2" }],
-    note: "So AMD." },
-
   { id: "ntfsaccess", cat: "windows", name: "Acelerar Acesso a Arquivos",
     desc: "Desativa o registro de ultimo acesso do NTFS (abre pastas e arquivos mais rapido).",
     reg: [{ path: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\FileSystem", name: "NtfsDisableLastAccessUpdate", type: "REG_DWORD", data: "1" }] },
@@ -330,13 +292,6 @@ const TWEAKS = [
       "netsh int tcp set global ecncapability=enabled",
       "netsh int tcp set global timestamps=enabled",
     ] },
-
-  { id: "amdoverlay", cat: "windows", name: "Desat. Overlay/Telemetria AMD",
-    desc: "Desliga conteudo web, telemetria e auto-update do AMD Software. So GPU AMD.",
-    reg: [
-      { path: "HKLM\\SOFTWARE\\AMD\\CN", name: "AllowWebContent", type: "REG_DWORD", data: "0" },
-      { path: "HKLM\\SOFTWARE\\AMD\\CN", name: "AutoUpdate", type: "REG_DWORD", data: "0" },
-    ], note: "So AMD." },
 
   { id: "gamemode", cat: "windows", name: "Ativar Game Mode",
     desc: "Liga o Modo de Jogo do Windows (prioriza recursos para o jogo em foco).",
@@ -488,14 +443,12 @@ const GAMES = [
 // sub-categoria dentro da aba Windows
 const SUBS = {
   energia: "Desempenho", priocpugpu: "Desempenho", prioforeground: "Desempenho",
-  ulps: "GPU", shadercache: "GPU",
   netthrottle: "Rede", tcplatency: "Rede",
   telemetria: "Privacidade", cortana: "Privacidade", gamebar: "Privacidade",
   werror: "Privacidade", menuiniciar: "Privacidade", appsbg: "Privacidade",
   widgets: "Privacidade", copilot: "Privacidade",
-  efeitos: "Sistema", indexacao: "Sistema", servicos: "Sistema", ntfsaccess: "Sistema",
+  efeitos: "Sistema", ntfsaccess: "Sistema",
   svchostsplit: "Sistema",
-  amdoverlay: "GPU",
   gamemode: "Desempenho", dicas: "Privacidade", notifsug: "Privacidade", explorerui: "Sistema",
 };
 
@@ -523,16 +476,12 @@ const PROBES = {
   copilot: { type: "reg", path: "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsCopilot", name: "TurnOffWindowsCopilot", equals: "1" },
   // svchostsplit: sem probe — o valor esperado varia por máquina (RAM);
   // o estado fica pelo backup local (aplicado pelo app = ativo).
-  servicos: { type: "cmd", run: "sc qc Spooler", contains: "DISABLED" },
   gamebar: { type: "reg", path: "HKCU\\System\\GameConfigStore", name: "GameDVR_Enabled", equals: "0" },
   werror: { type: "reg", path: "HKLM\\SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting", name: "Disabled", equals: "1" },
   telemetria: { type: "reg", path: "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection", name: "AllowTelemetry", equals: "0" },
-  indexacao: { type: "cmd", run: "sc qc WSearch", contains: "DISABLED" },
   menuiniciar: { type: "reg", path: "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Search", name: "BingSearchEnabled", equals: "0" },
   cortana: { type: "reg", path: "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Search", name: "AllowCortana", equals: "0" },
   priocpugpu: { type: "reg", path: MMCSS, name: "SystemResponsiveness", equals: "0" },
-  ulps: { type: "reg", path: "HKLM\\SYSTEM\\CurrentControlSet\\Services\\amdkmdag", name: "EnableUlps", equals: "0" },
-  shadercache: { type: "reg", path: "HKLM\\SYSTEM\\CurrentControlSet\\Services\\amdkmdag", name: "ShaderCache", equals: "2" },
   ntfsaccess: { type: "reg", path: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\FileSystem", name: "NtfsDisableLastAccessUpdate", equals: "1" },
   netthrottle: { type: "reg", path: MMCSS, name: "NetworkThrottlingIndex", equals: "4294967295" },
   gamemode: { type: "reg", path: "HKCU\\Software\\Microsoft\\GameBar", name: "AutoGameModeEnabled", equals: "1" },
@@ -543,24 +492,25 @@ const PROBES = {
 };
 
 // ===========================================================================
-// PLANOS
-//   full      -> tudo (precision + windows + system + jogos)
-//   precision -> so a aba PrecisionFix (features de mira/input, pro PVP)
-// Keys antigas ('standard', 'vip', etc.) contam como full.
+// PLANOS (produtos separados, SEM sobreposicao)
+//   precision -> SO os tweaks de mira/input (aba PrecisionFix). Nada de jogos.
+//   full      -> SO otimizacao (windows + system + jogos). SEM precision.
+//   Keys antigas ('standard', 'vip', etc.) contam como full.
 // ===========================================================================
 function normalizePlan(plan) {
   return String(plan || "").trim().toLowerCase() === "precision" ? "precision" : "full";
 }
 const PRECISION_IDS = new Set(TWEAKS.filter((t) => t.cat === "precision").map((t) => t.id));
 function allowedForPlan(plan, id) {
-  return normalizePlan(plan) === "full" || PRECISION_IDS.has(id);
+  // precision so libera precision; full libera todo o resto (menos precision).
+  return normalizePlan(plan) === "precision" ? PRECISION_IDS.has(id) : !PRECISION_IDS.has(id);
 }
 
 // ---- acessores ----
 function metaList(plan) {
   const p = normalizePlan(plan);
   return TWEAKS
-    .filter((t) => p === "full" || t.cat === "precision")
+    .filter((t) => (p === "precision" ? t.cat === "precision" : t.cat !== "precision"))
     .map((t) => ({
       id: t.id, cat: t.cat, name: t.name, desc: t.desc,
       action: !!t.action, confirm: t.confirm || null, note: t.note || null,
