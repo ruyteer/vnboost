@@ -159,7 +159,7 @@ const TWEAKS = [
   // nosso (da pra renomear/ativar de forma deterministica), batiza de
   // "VN BOOST" e desativa o idle do processador.
   { id: "energia", cat: "windows", name: "Otimizar Energia",
-    desc: "Cria e ativa o plano VN BOOST: processador travado no clock maximo (piso e teto 100%), turbo agressivo e sem idle. Foco em FPS estavel.",
+    desc: "Cria e ativa o plano VN BOOST: CPU travada no clock maximo (piso e teto 100%), todos os nucleos ativos (sem parking), turbo agressivo e sem idle. Foco em FPS estavel.",
     cmds: [
       "powercfg /duplicatescheme e9a42b02-d5df-448d-aa00-03f14749eb61 564e424f-4f53-5400-b057-e11d2a000001",
       'powercfg /changename 564e424f-4f53-5400-b057-e11d2a000001 "VN BOOST" "Fornece desempenho máximo para computadores de última geração."',
@@ -167,6 +167,7 @@ const TWEAKS = [
       "powercfg /setacvalueindex 564e424f-4f53-5400-b057-e11d2a000001 SUB_PROCESSOR PROCTHROTTLEMIN 100",
       "powercfg /setacvalueindex 564e424f-4f53-5400-b057-e11d2a000001 SUB_PROCESSOR PROCTHROTTLEMAX 100",
       "powercfg /setacvalueindex 564e424f-4f53-5400-b057-e11d2a000001 SUB_PROCESSOR PERFBOOSTMODE 2",
+      "powercfg /setacvalueindex 564e424f-4f53-5400-b057-e11d2a000001 SUB_PROCESSOR CPMINCORES 100",
       "powercfg /setactive 564e424f-4f53-5400-b057-e11d2a000001",
     ],
     revert: [
@@ -289,6 +290,16 @@ const TWEAKS = [
       { path: GAMES_TASK, name: "Priority", type: "REG_DWORD", data: "6" },
       { path: GAMES_TASK, name: "Scheduling Category", type: "REG_SZ", data: "High" },
     ] },
+
+  { id: "powerthrottling", cat: "windows", name: "Desat. Power Throttling",
+    desc: "Impede o Windows de reduzir a CPU de apps/jogos pra economizar energia (Power Throttling OFF).",
+    reg: [{ path: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Power\\PowerThrottling", name: "PowerThrottlingOff", type: "REG_DWORD", data: "1" }] },
+
+  { id: "hibernar", cat: "windows", name: "Desat. Hibernacao",
+    desc: "Desliga a hibernacao e apaga o hiberfil.sys (libera alguns GB de disco). Nao afeta o suspender/sleep normal.",
+    cmds: ["powercfg /hibernate off"],
+    revert: ["powercfg /hibernate on"],
+    note: "Libera espaco em disco. Reverter religa a hibernacao." },
 
   { id: "ntfsaccess", cat: "windows", name: "Acelerar Acesso a Arquivos",
     desc: "Desativa o registro de ultimo acesso do NTFS (abre pastas e arquivos mais rapido).",
@@ -461,6 +472,7 @@ const GAMES = [
 // sub-categoria dentro da aba Windows
 const SUBS = {
   energia: "Desempenho", priocpugpu: "Desempenho", prioforeground: "Desempenho",
+  powerthrottling: "Desempenho", hibernar: "Sistema",
   netthrottle: "Rede", tcplatency: "Rede",
   telemetria: "Privacidade", cortana: "Privacidade", gamebar: "Privacidade",
   werror: "Privacidade", menuiniciar: "Privacidade", appsbg: "Privacidade",
@@ -507,6 +519,8 @@ const PROBES = {
   notifsug: { type: "reg", path: "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Notifications\\Settings\\Windows.SystemToast.Suggested", name: "Enabled", equals: "0" },
   explorerui: { type: "reg", path: "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", name: "LaunchTo", equals: "1" },
   prioforeground: { type: "reg", path: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl", name: "Win32PrioritySeparation", equals: "38" },
+  powerthrottling: { type: "reg", path: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Power\\PowerThrottling", name: "PowerThrottlingOff", equals: "1" },
+  // hibernar: sem probe — estado via backup local (aplicado pelo app = ativo).
 };
 
 // ===========================================================================
