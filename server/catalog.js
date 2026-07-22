@@ -159,12 +159,14 @@ const TWEAKS = [
   // nosso (da pra renomear/ativar de forma deterministica), batiza de
   // "VN BOOST" e desativa o idle do processador.
   { id: "energia", cat: "windows", name: "Otimizar Energia",
-    desc: "Cria e ativa o plano de energia VN BOOST (desempenho maximo) e desativa o idle do processador.",
+    desc: "Cria e ativa o plano VN BOOST: processador travado no clock maximo (piso e teto 100%), turbo agressivo e sem idle. Foco em FPS estavel.",
     cmds: [
       "powercfg /duplicatescheme e9a42b02-d5df-448d-aa00-03f14749eb61 564e424f-4f53-5400-b057-e11d2a000001",
       'powercfg /changename 564e424f-4f53-5400-b057-e11d2a000001 "VN BOOST" "Fornece desempenho máximo para computadores de última geração."',
       "powercfg /setacvalueindex 564e424f-4f53-5400-b057-e11d2a000001 SUB_PROCESSOR IdleDisable 0",
+      "powercfg /setacvalueindex 564e424f-4f53-5400-b057-e11d2a000001 SUB_PROCESSOR PROCTHROTTLEMIN 100",
       "powercfg /setacvalueindex 564e424f-4f53-5400-b057-e11d2a000001 SUB_PROCESSOR PROCTHROTTLEMAX 100",
+      "powercfg /setacvalueindex 564e424f-4f53-5400-b057-e11d2a000001 SUB_PROCESSOR PERFBOOSTMODE 2",
       "powercfg /setactive 564e424f-4f53-5400-b057-e11d2a000001",
     ],
     revert: [
@@ -213,6 +215,22 @@ const TWEAKS = [
     desc: "Agrupa servicos do Windows em menos processos svchost (limite ajustado pra RAM da maquina).",
     special: "svchostsplit",
     note: "Precisa reiniciar o PC para valer." },
+
+  { id: "xboxsvc", cat: "windows", name: "Desat. Servicos Xbox",
+    desc: "Encerra e deixa em manual os 4 servicos do Xbox (nao iniciam sozinhos). Nao afeta jogos que nao usam Xbox.",
+    cmds: [
+      "sc stop XblAuthManager", "sc config XblAuthManager start= demand",
+      "sc stop XblGameSave", "sc config XblGameSave start= demand",
+      "sc stop XboxGipSvc", "sc config XboxGipSvc start= demand",
+      "sc stop XboxNetApiSvc", "sc config XboxNetApiSvc start= demand",
+    ],
+    revert: [
+      "sc config XblAuthManager start= demand",
+      "sc config XblGameSave start= demand",
+      "sc config XboxGipSvc start= demand",
+      "sc config XboxNetApiSvc start= demand",
+    ],
+    note: "Deixa os servicos Xbox como manual (padrao do Windows). So use se nao joga por Xbox/Game Pass." },
 
   { id: "gamebar", cat: "windows", name: "Otimizar GameBar",
     desc: "Desliga GameDVR/Game Bar e a captura em segundo plano.",
@@ -448,7 +466,7 @@ const SUBS = {
   werror: "Privacidade", menuiniciar: "Privacidade", appsbg: "Privacidade",
   widgets: "Privacidade", copilot: "Privacidade",
   efeitos: "Sistema", ntfsaccess: "Sistema",
-  svchostsplit: "Sistema",
+  svchostsplit: "Sistema", xboxsvc: "Sistema",
   gamemode: "Desempenho", dicas: "Privacidade", notifsug: "Privacidade", explorerui: "Sistema",
 };
 
