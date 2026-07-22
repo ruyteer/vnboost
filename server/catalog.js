@@ -348,6 +348,18 @@ const TWEAKS = [
       { path: "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", name: "ShowSyncProviderNotifications", type: "REG_DWORD", data: "0" },
     ] },
 
+  { id: "debloatnav", cat: "windows", name: "Debloat Navegadores",
+    desc: "Chrome, Edge e Brave param de rodar em 2o plano ao fechar, sem startup boost e sem telemetria. Reversivel — so politica de registro, nao apaga nada.",
+    reg: [
+      { path: "HKLM\\SOFTWARE\\Policies\\Google\\Chrome", name: "BackgroundModeEnabled", type: "REG_DWORD", data: "0" },
+      { path: "HKLM\\SOFTWARE\\Policies\\Google\\Chrome", name: "MetricsReportingEnabled", type: "REG_DWORD", data: "0" },
+      { path: "HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge", name: "BackgroundModeEnabled", type: "REG_DWORD", data: "0" },
+      { path: "HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge", name: "StartupBoostEnabled", type: "REG_DWORD", data: "0" },
+      { path: "HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge", name: "MetricsReportingEnabled", type: "REG_DWORD", data: "0" },
+      { path: "HKLM\\SOFTWARE\\Policies\\BraveSoftware\\Brave", name: "BackgroundModeEnabled", type: "REG_DWORD", data: "0" },
+    ],
+    note: "Vale ao reiniciar o navegador. Nao mexe em arquivo nenhum do navegador." },
+
   // ---------------- SYSTEM (acoes) ----------------
   { id: "ping", cat: "system", name: "Melhorar Ping/DNS",
     desc: "Limpa o cache DNS e renova o IP (flushdns + release + renew).",
@@ -480,6 +492,7 @@ const SUBS = {
   efeitos: "Sistema", ntfsaccess: "Sistema",
   svchostsplit: "Sistema", xboxsvc: "Sistema",
   gamemode: "Desempenho", dicas: "Privacidade", notifsug: "Privacidade", explorerui: "Sistema",
+  debloatnav: "Apps",
 };
 
 // "probes": como verificar no PC se o tweak ja esta aplicado (estado real).
@@ -520,6 +533,7 @@ const PROBES = {
   explorerui: { type: "reg", path: "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", name: "LaunchTo", equals: "1" },
   prioforeground: { type: "reg", path: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl", name: "Win32PrioritySeparation", equals: "38" },
   powerthrottling: { type: "reg", path: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Power\\PowerThrottling", name: "PowerThrottlingOff", equals: "1" },
+  debloatnav: { type: "reg", path: "HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge", name: "BackgroundModeEnabled", equals: "0" },
   // hibernar: sem probe — estado via backup local (aplicado pelo app = ativo).
 };
 
