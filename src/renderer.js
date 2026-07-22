@@ -81,17 +81,22 @@ function applyPlan(plan) {
   badge.textContent = prec ? "PVP EDITION" : "FULL";
   badge.classList.toggle("pvp", prec);
 
-  // esconde as abas exclusivas do full (fica só Dashboard, PrecisionFix e Config)
+  // Planos separados, sem sobreposição:
+  //  - precision: só Dashboard, PrecisionFix e Config
+  //  - full: tudo MENOS PrecisionFix (só otimização)
   document.querySelectorAll('[data-planonly="full"]').forEach((el) => (el.hidden = prec));
+  document.querySelectorAll('[data-planonly="precision"]').forEach((el) => (el.hidden = !prec));
 
   // dashboard: hero PVP x painel completo
   $("#dashFull").hidden = prec;
   $("#dashPrecision").hidden = !prec;
 
   // se estiver numa tela que não existe no plano, volta pro dashboard
-  if (prec) {
-    const active = document.querySelector(".screen.active");
-    if (active && ["screen-windows", "screen-jogos", "screen-system", "screen-fivem", "screen-notifs"].includes(active.id)) go("dashboard");
+  const active = document.querySelector(".screen.active");
+  if (active) {
+    const fullOnly = ["screen-windows", "screen-jogos", "screen-system", "screen-fivem", "screen-notifs"];
+    if (prec && fullOnly.includes(active.id)) go("dashboard");
+    if (!prec && active.id === "screen-precision") go("dashboard");
   }
   if (window.lucide) lucide.createIcons();
 }
@@ -403,6 +408,7 @@ async function init() {
 
   const perfActions = {
     precision: async () => { if (handleResult(await window.api.applyAll("precision"), "Precision Fix ativado.")) await refreshStatus(); },
+    windows: async () => { if (handleResult(await window.api.applyAll("windows"), "Otimizações do Windows aplicadas.")) await refreshStatus(); },
     ram: async () => handleResult(await window.api.apply("ramfull"), "Memória RAM limpa."),
     cache: async () => handleResult(await window.api.apply("limparcache"), "Cache do Windows limpo."),
     ping: async () => handleResult(await window.api.apply("ping"), "Ping otimizado."),
