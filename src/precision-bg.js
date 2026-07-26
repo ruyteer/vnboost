@@ -31,9 +31,10 @@
         scaleMobile: 1,
         color: 0xe10600,
         backgroundColor: 0x0a0a0c,
-        points: 9,
-        maxDistance: 21,
-        spacing: 17,
+        // poucos pontos e bem espacados: fundo limpo, so uma malha sutil
+        points: 4,
+        maxDistance: 17,
+        spacing: 26,
       });
     } catch (e) {
       /* fundo e opcional */

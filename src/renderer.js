@@ -176,7 +176,7 @@ function buildOrbit(tweaks) {
     b.style.left = x + "%";
     b.style.top = y + "%";
     b.title = t.desc || t.name;
-    b.innerHTML = `<i class="orbit-dot"></i><span>${t.name}</span>`;
+    b.innerHTML = `<span>${t.name}</span><i class="orbit-sw"></i>`;
 
     b.addEventListener("click", () => withBusy(async () => {
       // acao pontual (sem reverter) x tweak liga/desliga
