@@ -481,8 +481,15 @@ const GAMES = [
 
 
 
-// sub-categoria dentro da aba Windows
+// sub-categoria: no PrecisionFix separa o que e de mouse do que e de teclado
+// (cada um tem sua tela, com o modelo 3D correspondente). Precision sem sub
+// definido cai em "Mouse".
 const SUBS = {
+  // --- PrecisionFix ---
+  filterkeys: "Teclado", accessibility: "Teclado",
+  kbdqueue: "Teclado", kbresponse: "Teclado",
+
+  // --- aba Windows ---
   energia: "Desempenho", priocpugpu: "Desempenho", prioforeground: "Desempenho",
   powerthrottling: "Desempenho", hibernar: "Sistema",
   netthrottle: "Rede", tcplatency: "Rede",

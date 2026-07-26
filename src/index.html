@@ -47,7 +47,8 @@
       </div>
       <nav class="nav">
         <button class="nav-item active" data-screen="dashboard"><i data-lucide="layout-dashboard"></i> Dashboard</button>
-        <button class="nav-item" data-screen="precision" data-planonly="precision"><i data-lucide="crosshair"></i> PrecisionFix</button>
+        <button class="nav-item" data-screen="precision" data-planonly="precision"><i data-lucide="mouse-pointer-2"></i> PrecisionFix</button>
+        <button class="nav-item" data-screen="teclado" data-planonly="precision"><i data-lucide="keyboard"></i> TecladoFix</button>
         <button class="nav-item" data-screen="windows" data-planonly="full"><i data-lucide="monitor"></i> Windows</button>
         <button class="nav-item" data-screen="jogos" data-planonly="full"><i data-lucide="gamepad-2"></i> Jogos</button>
         <button class="nav-item" data-screen="fivem" data-planonly="full"><i data-lucide="rocket"></i> FiveM</button>
@@ -153,45 +154,100 @@
           </div><!-- /dashFull -->
         </section>
 
-        <!-- PRECISION: mouse 3D no centro, tweaks em órbita ao redor -->
+        <!-- PRECISION · MOUSE: modelo no centro, tweaks em duas colunas -->
         <section class="screen" id="screen-precision">
           <div class="pf-arena">
-            <div id="pf-bg" class="pf-bg"></div>
+            <div class="pf-bg"></div>
 
-            <!-- botões dos tweaks (posicionados em arco pelo renderer) -->
-            <div class="pf-orbit" id="pf-orbit"></div>
+            <header class="pf-head">
+              <h2>Mouse</h2>
+              <p>Precisão e resposta do mouse — tracking, sensibilidade e flick.</p>
+            </header>
 
-            <!-- mouse 3D: arraste pra girar -->
-            <div class="pf-model">
-              <div class="pf-model-glow"></div>
-              <model-viewer
-                id="pfMouse"
-                src="assets/mouse.glb"
-                alt="Mouse 3D"
-                camera-controls
-                disable-pan
-                auto-rotate
-                auto-rotate-delay="1500"
-                rotation-per-second="14deg"
-                environment-image="neutral"
-                exposure="1.45"
-                shadow-intensity="1.6"
-                shadow-softness="0.9"
-                camera-orbit="25deg 65deg 100%"
-                min-camera-orbit="auto 15deg auto"
-                max-camera-orbit="auto 100deg auto"
-                interaction-prompt="none"
-                touch-action="none"
-              ></model-viewer>
-              <span class="pf-hint"><i data-lucide="move-3d"></i> arraste pra girar</span>
+            <div class="pf-cols">
+              <div class="pf-col left" id="pf-mouse-l"></div>
+
+              <div class="pf-model">
+                <div class="pf-model-glow"></div>
+                <model-viewer
+                  src="assets/mouse.glb"
+                  alt="Mouse 3D"
+                  camera-controls
+                  disable-pan
+                  auto-rotate
+                  auto-rotate-delay="1500"
+                  rotation-per-second="14deg"
+                  environment-image="neutral"
+                  exposure="2.1"
+                  shadow-intensity="1.6"
+                  shadow-softness="0.9"
+                  camera-orbit="25deg 65deg 100%"
+                  min-camera-orbit="auto 15deg auto"
+                  max-camera-orbit="auto 100deg auto"
+                  interaction-prompt="none"
+                  touch-action="none"
+                ></model-viewer>
+                <span class="pf-hint"><i data-lucide="move-3d"></i> arraste pra girar</span>
+              </div>
+
+              <div class="pf-col right" id="pf-mouse-r"></div>
             </div>
 
-            <!-- ações gerais -->
             <div class="pf-bottom">
-              <button class="btn3d btn3d-primary" data-applyall="precision">
+              <button class="btn3d btn3d-primary" data-applygroup="Mouse">
                 <i data-lucide="zap"></i> APLICAR TUDO
               </button>
-              <button class="btn3d" data-revertall="precision">
+              <button class="btn3d" data-revertgroup="Mouse">
+                <i data-lucide="rotate-ccw"></i> REVERTER
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- PRECISION · TECLADO -->
+        <section class="screen" id="screen-teclado">
+          <div class="pf-arena">
+            <div class="pf-bg"></div>
+
+            <header class="pf-head">
+              <h2>Teclado</h2>
+              <p>Resposta do teclado — sem atraso de repetição, filtros e atalhos.</p>
+            </header>
+
+            <div class="pf-cols">
+              <div class="pf-col left" id="pf-kb-l"></div>
+
+              <div class="pf-model wide">
+                <div class="pf-model-glow"></div>
+                <model-viewer
+                  src="assets/keyboard.glb"
+                  alt="Teclado 3D"
+                  camera-controls
+                  disable-pan
+                  auto-rotate
+                  auto-rotate-delay="1500"
+                  rotation-per-second="14deg"
+                  environment-image="neutral"
+                  exposure="2.0"
+                  shadow-intensity="1.5"
+                  shadow-softness="0.9"
+                  camera-orbit="20deg 62deg 100%"
+                  min-camera-orbit="auto 15deg auto"
+                  max-camera-orbit="auto 100deg auto"
+                  interaction-prompt="none"
+                  touch-action="none"
+                ></model-viewer>
+                <span class="pf-hint"><i data-lucide="move-3d"></i> arraste pra girar</span>
+              </div>
+
+              <div class="pf-col right" id="pf-kb-r"></div>
+            </div>
+
+            <div class="pf-bottom">
+              <button class="btn3d btn3d-primary" data-applygroup="Teclado">
+                <i data-lucide="zap"></i> APLICAR TUDO
+              </button>
+              <button class="btn3d" data-revertgroup="Teclado">
                 <i data-lucide="rotate-ccw"></i> REVERTER
               </button>
             </div>

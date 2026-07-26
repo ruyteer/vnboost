@@ -325,31 +325,46 @@ body {
 
 
 /* ==========================================================================
-   PRECISION FIX — arena: mouse 3D no centro, tweaks em orbita
+   PRECISION FIX — modelo 3D no centro, tweaks em duas colunas alinhadas
    ========================================================================== */
 .pf-arena {
   position: relative;
   /* cancela o padding do .screens pra ocupar a tela toda */
   margin: -22px -26px;
   min-height: calc(100vh - 84px);
+  padding: 26px 34px 92px;
   overflow: hidden;
+  display: flex; flex-direction: column;
 }
 
-/* fundo animado (Vanta) cobrindo tudo */
+/* fundo animado cobrindo tudo */
 .pf-bg { position: absolute; inset: 0; z-index: 0; opacity: 0.34; }
 .pf-arena::after {
   content: "";
   position: absolute; inset: 0; z-index: 1; pointer-events: none;
-  background: radial-gradient(90% 70% at 50% 50%, transparent 35%, rgba(10,10,12,0.82) 100%);
+  background: radial-gradient(88% 68% at 50% 48%, transparent 38%, rgba(10,10,12,0.86) 100%);
 }
 
-/* ---------- mouse 3D ---------- */
-.pf-model {
-  position: absolute; left: 50%; top: 48%; transform: translate(-50%, -50%);
-  z-index: 2;
-  width: min(38%, 460px); aspect-ratio: 1 / 1;
+/* cabecalho */
+.pf-head { position: relative; z-index: 2; margin-bottom: 6px; }
+.pf-head h2 { font-size: 30px; font-weight: 800; letter-spacing: -0.5px; color: #fff; }
+.pf-head p { margin-top: 4px; font-size: 12.5px; color: var(--muted); }
+
+/* colunas: [tweaks] [modelo] [tweaks] */
+.pf-cols {
+  position: relative; z-index: 2; flex: 1;
+  display: grid; grid-template-columns: 1fr minmax(260px, 440px) 1fr;
+  align-items: center; gap: 22px;
 }
+.pf-col { display: flex; flex-direction: column; gap: 13px; }
+.pf-col.left { align-items: flex-end; }
+.pf-col.right { align-items: flex-start; }
+
+/* ---------- modelo 3D ---------- */
+.pf-model { position: relative; width: 100%; aspect-ratio: 1 / 1; max-height: 62vh; }
+.pf-model.wide { aspect-ratio: 4 / 3; }
 .pf-model model-viewer {
+  position: relative; z-index: 1;
   width: 100%; height: 100%;
   --poster-color: transparent;
   --progress-bar-color: var(--red);
@@ -358,29 +373,23 @@ body {
 .pf-model model-viewer:active { cursor: grabbing; }
 .pf-model-glow {
   position: absolute; left: 50%; top: 52%; transform: translate(-50%, -50%);
-  width: 92%; aspect-ratio: 1.35 / 1; border-radius: 50%;
+  width: 76%; aspect-ratio: 1.4 / 1; border-radius: 50%;
   background: radial-gradient(circle, var(--red-glow) 0%, transparent 66%);
-  filter: blur(34px); opacity: 0.45; pointer-events: none;
+  filter: blur(34px); opacity: 0.72; pointer-events: none;
 }
 .pf-hint {
-  position: absolute; left: 50%; bottom: -6px; transform: translateX(-50%);
+  position: absolute; left: 50%; bottom: 2px; transform: translateX(-50%);
   display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
   font-size: 10px; letter-spacing: 1.6px; text-transform: uppercase; color: var(--muted);
-  opacity: 0.65; pointer-events: none;
+  opacity: 0.6; pointer-events: none;
 }
 .pf-hint svg { width: 13px; height: 13px; }
 
-/* ---------- botoes em orbita ---------- */
-/* o container nao pode capturar clique: senao trava o arrasto do modelo */
-.pf-orbit { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
-
-/* minimalista: so borda, texto e switch — sem cor de fundo */
-.orbit-btn {
-  position: absolute; transform: translate(-50%, -50%);
-  pointer-events: auto; cursor: pointer;
-  display: flex; align-items: center; gap: 10px;
-  width: 186px; padding: 10px 13px;
-  border-radius: 10px; text-align: left;
+/* ---------- item de tweak: so borda, texto e switch ---------- */
+.tw-item {
+  display: flex; align-items: center; gap: 11px;
+  width: 214px; padding: 10px 13px;
+  border-radius: 10px; cursor: pointer;
   font-family: var(--font); font-size: 12px; font-weight: 500; line-height: 1.25;
   color: var(--muted);
   background: transparent;
@@ -388,19 +397,20 @@ body {
   backdrop-filter: blur(3px);
   transition: border-color 0.18s ease, color 0.18s ease;
 }
-.orbit-btn.left { flex-direction: row-reverse; text-align: right; }
-.orbit-btn span { flex: 1; }
-.orbit-btn:hover { color: var(--text); border-color: rgba(225,6,0,0.45); }
-.orbit-btn:disabled { opacity: 0.45; cursor: default; }
+.tw-item.left { text-align: left; }
+.tw-item.right { text-align: right; }
+.tw-item span { flex: 1; }
+.tw-item:hover { color: var(--text); border-color: rgba(225,6,0,0.45); }
+.tw-item:disabled { opacity: 0.45; cursor: default; }
 
 /* switch: visual puro, o estado vem da classe .on do proprio botao */
-.orbit-sw {
+.tw-sw {
   position: relative; flex-shrink: 0;
   width: 30px; height: 17px; border-radius: 20px;
   border: 1px solid rgba(255,255,255,0.16); background: transparent;
   transition: border-color 0.2s ease, background 0.2s ease;
 }
-.orbit-sw::after {
+.tw-sw::after {
   content: ""; position: absolute; top: 2px; left: 2px;
   width: 11px; height: 11px; border-radius: 50%;
   background: #55555f;
@@ -408,9 +418,9 @@ body {
 }
 
 /* aplicado */
-.orbit-btn.on { color: #fff; border-color: rgba(225,6,0,0.42); }
-.orbit-btn.on .orbit-sw { border-color: rgba(225,6,0,0.6); background: rgba(225,6,0,0.14); }
-.orbit-btn.on .orbit-sw::after { left: 15px; background: var(--red); box-shadow: 0 0 9px var(--red); }
+.tw-item.on { color: #fff; border-color: rgba(225,6,0,0.42); }
+.tw-item.on .tw-sw { border-color: rgba(225,6,0,0.6); background: rgba(225,6,0,0.14); }
+.tw-item.on .tw-sw::after { left: 15px; background: var(--red); box-shadow: 0 0 9px var(--red); }
 
 /* ---------- acoes gerais ---------- */
 .pf-bottom {
@@ -419,9 +429,10 @@ body {
 }
 
 @media (max-width: 1180px) {
-  .orbit-btn { width: 150px; font-size: 11px; padding: 9px 12px; }
-  .pf-model { width: min(34%, 360px); }
+  .pf-cols { grid-template-columns: 1fr minmax(200px, 320px) 1fr; gap: 14px; }
+  .tw-item { width: 178px; font-size: 11px; padding: 9px 11px; }
 }
+
 
 /* credito de licenca (CC-BY do modelo 3D) */
 .credits { font-size: 11px; color: var(--muted); line-height: 1.5; padding: 4px 2px; }

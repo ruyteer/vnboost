@@ -9,7 +9,7 @@ function log(text) {
 }
 window.api.onLog((t) => log(t));
 
-function setBusy(b) { document.querySelectorAll(".btn,.btn3d,.orbit-btn,.perf-btn,.tw-switch,.game-switch").forEach((x) => (x.disabled = b)); }
+function setBusy(b) { document.querySelectorAll(".btn,.btn3d,.tw-item,.perf-btn,.tw-switch,.game-switch").forEach((x) => (x.disabled = b)); }
 async function withBusy(fn) {
   setBusy(true);
   try { await fn(); } catch (e) { log("Erro: " + (e && e.message ? e.message : e)); }
@@ -96,7 +96,7 @@ function applyPlan(plan) {
   if (active) {
     const fullOnly = ["screen-windows", "screen-jogos", "screen-system", "screen-fivem", "screen-notifs"];
     if (prec && fullOnly.includes(active.id)) go("dashboard");
-    if (!prec && active.id === "screen-precision") go("dashboard");
+    if (!prec && ["screen-precision", "screen-teclado"].includes(active.id)) go("dashboard");
   }
   if (window.lucide) lucide.createIcons();
 }
@@ -107,7 +107,7 @@ async function refreshStatus() {
     const st = await window.api.tweakStatus();
     const ts = new Set(st.tweaks || []), gs = new Set(st.games || []);
     document.querySelectorAll(".tw-switch").forEach((s) => (s.checked = ts.has(s.dataset.id)));
-    document.querySelectorAll(".orbit-btn").forEach((b) => b.classList.toggle("on", ts.has(b.dataset.id)));
+    document.querySelectorAll(".tw-item").forEach((b) => b.classList.toggle("on", ts.has(b.dataset.id)));
     document.querySelectorAll(".game-switch").forEach((s) => (s.checked = gs.has(s.dataset.name)));
     const n = (st.tweaks || []).length;
     const total = st.total || 0;
@@ -149,56 +149,74 @@ function makeCard(t) {
   }
   return card;
 }
-// Botoes dos tweaks de precisao distribuidos em arco ao redor do mouse 3D.
-// Metade em cada lado; a posicao sai de uma elipse (so os arcos laterais, pra
-// nao passar por cima do modelo).
-function buildOrbit(tweaks) {
-  const orbit = $("#pf-orbit");
-  if (!orbit) return;
-  orbit.innerHTML = "";
+// ---------------- PrecisionFix (mouse / teclado) ----------------
+// Os tweaks ficam em duas colunas alinhadas, flanqueando o modelo 3D. A
+// separacao mouse x teclado vem do campo `sub` do catalogo (server-side).
+let PRECISION_TWEAKS = [];
 
-  const n = tweaks.length;
-  const half = Math.ceil(n / 2);
-  const SPREAD = 136; // graus de abertura do arco de cada lado
+const isKb = (t) => t.sub === "Teclado";
 
+function makeTweakItem(t, side) {
+  const b = document.createElement("button");
+  b.className = "tw-item " + side;
+  b.dataset.id = t.id;
+  b.title = t.desc || t.name;
+  // o switch fica sempre do lado de dentro (perto do modelo)
+  const sw = '<i class="tw-sw"></i>';
+  const label = `<span>${t.name}</span>`;
+  b.innerHTML = side === "left" ? label + sw : sw + label;
+
+  b.addEventListener("click", () => withBusy(async () => {
+    // acao pontual (sem reverter) x tweak liga/desliga
+    if (t.action) {
+      if (t.confirm && !window.confirm(t.confirm)) return;
+      handleResult(await window.api.apply(t.id), `Ação executada: ${t.name}`);
+      return;
+    }
+    const on = !b.classList.contains("on");
+    const res = on ? await window.api.apply(t.id) : await window.api.revert(t.id);
+    const ok = handleResult(res, `${on ? "Aplicado" : "Revertido"}: ${t.name}`);
+    if (ok) {
+      b.classList.toggle("on", on);
+      if (on && t.note && /reinici/i.test(t.note) && rebootNotifOn()) {
+        notify(`${t.name} exige reiniciar o PC.`, "warn");
+      }
+    }
+    await refreshStatus();
+  }));
+
+  return b;
+}
+
+function fillColumns(tweaks, leftEl, rightEl) {
+  if (!leftEl || !rightEl) return;
+  leftEl.innerHTML = "";
+  rightEl.innerHTML = "";
+  const half = Math.ceil(tweaks.length / 2);
   tweaks.forEach((t, i) => {
-    const isLeft = i >= half;
-    const idx = isLeft ? i - half : i;
-    const count = (isLeft ? n - half : half) || 1;
-    const deg = -SPREAD / 2 + SPREAD * (count > 1 ? idx / (count - 1) : 0.5);
-    const a = (deg * Math.PI) / 180;
-    const x = 50 + (isLeft ? -1 : 1) * Math.cos(a) * 32;
-    const y = 50 + Math.sin(a) * 40;
-
-    const b = document.createElement("button");
-    b.className = "orbit-btn" + (isLeft ? " left" : "");
-    b.dataset.id = t.id;
-    b.style.left = x + "%";
-    b.style.top = y + "%";
-    b.title = t.desc || t.name;
-    b.innerHTML = `<span>${t.name}</span><i class="orbit-sw"></i>`;
-
-    b.addEventListener("click", () => withBusy(async () => {
-      // acao pontual (sem reverter) x tweak liga/desliga
-      if (t.action) {
-        if (t.confirm && !window.confirm(t.confirm)) return;
-        handleResult(await window.api.apply(t.id), `Ação executada: ${t.name}`);
-        return;
-      }
-      const on = !b.classList.contains("on");
-      const res = on ? await window.api.apply(t.id) : await window.api.revert(t.id);
-      const ok = handleResult(res, `${on ? "Aplicado" : "Revertido"}: ${t.name}`);
-      if (ok) {
-        b.classList.toggle("on", on);
-        if (on && t.note && /reinici/i.test(t.note) && rebootNotifOn()) {
-          notify(`${t.name} exige reiniciar o PC.`, "warn");
-        }
-      }
-      await refreshStatus();
-    }));
-
-    orbit.appendChild(b);
+    const left = i < half;
+    (left ? leftEl : rightEl).appendChild(makeTweakItem(t, left ? "left" : "right"));
   });
+}
+
+function buildPrecision(tweaks) {
+  PRECISION_TWEAKS = tweaks;
+  fillColumns(tweaks.filter((t) => !isKb(t)), $("#pf-mouse-l"), $("#pf-mouse-r"));
+  fillColumns(tweaks.filter(isKb), $("#pf-kb-l"), $("#pf-kb-r"));
+}
+
+// "Aplicar/Reverter tudo" de um grupo (Mouse ou Teclado).
+async function applyGroup(group, on) {
+  const list = PRECISION_TWEAKS.filter((t) =>
+    group === "Teclado" ? isKb(t) : !isKb(t),
+  );
+  for (const t of list) {
+    if (t.action) continue;
+    const res = on ? await window.api.apply(t.id) : await window.api.revert(t.id);
+    if (!handleResult(res)) return;
+  }
+  notify(`${group}: tweaks ${on ? "aplicados" : "revertidos"}.`, "ok");
+  await refreshStatus();
 }
 
 function makeGameCard(g) {
@@ -254,7 +272,7 @@ async function loadCatalog() {
   // o plano que vale é o que o servidor mandou junto do catálogo
   if (cat.plan) applyPlan(cat.plan);
   // precision = botoes em orbita do mouse 3D; o resto continua em cards
-  buildOrbit(cat.tweaks.filter((t) => t.cat === "precision"));
+  buildPrecision(cat.tweaks.filter((t) => t.cat === "precision"));
   const grids = { system: gs };
   cat.tweaks.forEach((t) => grids[t.cat] && grids[t.cat].appendChild(makeCard(t)));
   buildWindows(cat.tweaks.filter((t) => t.cat === "windows"));
@@ -478,6 +496,12 @@ async function init() {
     withBusy(async () => { if (handleResult(await window.api.applyAll(b.dataset.applyall), `Aplicado tudo: ${b.dataset.applyall}`)) await refreshStatus(); })));
   document.querySelectorAll("[data-revertall]").forEach((b) => b.addEventListener("click", () =>
     withBusy(async () => { if (handleResult(await window.api.revertAll(b.dataset.revertall), `Revertido tudo: ${b.dataset.revertall}`)) await refreshStatus(); })));
+
+  // aplicar/reverter so o grupo da tela (Mouse ou Teclado)
+  document.querySelectorAll("[data-applygroup]").forEach((b) => b.addEventListener("click", () =>
+    withBusy(() => applyGroup(b.dataset.applygroup, true))));
+  document.querySelectorAll("[data-revertgroup]").forEach((b) => b.addEventListener("click", () =>
+    withBusy(() => applyGroup(b.dataset.revertgroup, false))));
 
   $("#gameSearch").addEventListener("input", (e) => {
     const q = e.target.value.trim().toLowerCase(); let shown = 0;
