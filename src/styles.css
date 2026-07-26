@@ -323,85 +323,107 @@ body {
 
 .pvp-shortcuts { grid-template-columns: repeat(2, 1fr); }
 
+
 /* ==========================================================================
-   PRECISION FIX — hero com cena 3D + botoes/cards 3D
+   PRECISION FIX — arena: mouse 3D no centro, tweaks em orbita
    ========================================================================== */
-.pf-hero {
+.pf-arena {
   position: relative;
+  /* cancela o padding do .screens pra ocupar a tela toda */
+  margin: -22px -26px;
+  min-height: calc(100vh - 84px);
   overflow: hidden;
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  background: linear-gradient(180deg, var(--panel), var(--bg-2));
-  margin-bottom: 26px;
 }
 
-/* fundo animado (Vanta) atras de tudo */
-.pf-bg { position: absolute; inset: 0; z-index: 0; opacity: 0.55; }
-.pf-hero::after {
+/* fundo animado (Vanta) cobrindo tudo */
+.pf-bg { position: absolute; inset: 0; z-index: 0; opacity: 0.5; }
+.pf-arena::after {
   content: "";
   position: absolute; inset: 0; z-index: 1; pointer-events: none;
-  background:
-    radial-gradient(120% 90% at 15% 50%, rgba(10,10,12,0.92) 30%, transparent 75%),
-    linear-gradient(180deg, transparent 55%, rgba(10,10,12,0.85));
+  background: radial-gradient(90% 70% at 50% 50%, transparent 35%, rgba(10,10,12,0.82) 100%);
 }
 
-.pf-hero-inner {
-  position: relative; z-index: 2;
-  display: grid; grid-template-columns: minmax(260px, 400px) 1fr;
-  gap: 26px; align-items: center; padding: 26px 30px;
+/* ---------- mouse 3D ---------- */
+.pf-model {
+  position: absolute; left: 50%; top: 48%; transform: translate(-50%, -50%);
+  z-index: 2;
+  width: min(38%, 460px); aspect-ratio: 1 / 1;
+}
+.pf-model model-viewer {
+  width: 100%; height: 100%;
+  --poster-color: transparent;
+  --progress-bar-color: var(--red);
+  cursor: grab;
+}
+.pf-model model-viewer:active { cursor: grabbing; }
+.pf-model-glow {
+  position: absolute; left: 50%; top: 52%; transform: translate(-50%, -50%);
+  width: 92%; aspect-ratio: 1.35 / 1; border-radius: 50%;
+  background: radial-gradient(circle, var(--red-glow) 0%, transparent 66%);
+  filter: blur(34px); opacity: 0.45; pointer-events: none;
+}
+.pf-hint {
+  position: absolute; left: 50%; bottom: -6px; transform: translateX(-50%);
+  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+  font-size: 10px; letter-spacing: 1.6px; text-transform: uppercase; color: var(--muted);
+  opacity: 0.65; pointer-events: none;
+}
+.pf-hint svg { width: 13px; height: 13px; }
+
+/* ---------- botoes em orbita ---------- */
+/* o container nao pode capturar clique: senao trava o arrasto do modelo */
+.pf-orbit { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+
+.orbit-btn {
+  position: absolute; transform: translate(-50%, -50%);
+  pointer-events: auto; cursor: pointer;
+  display: flex; align-items: center; gap: 9px;
+  width: 178px; padding: 11px 14px;
+  border-radius: 12px; text-align: left;
+  font-family: var(--font); font-size: 12px; font-weight: 600; line-height: 1.25;
+  color: var(--muted);
+  background: linear-gradient(180deg, rgba(28,28,35,0.94), rgba(13,13,17,0.94));
+  border: 1px solid var(--line);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 4px 0 -1px rgba(0,0,0,0.5), 0 14px 26px -16px rgba(0,0,0,0.9);
+  transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+}
+.orbit-btn.left { flex-direction: row-reverse; text-align: right; }
+.orbit-btn span { flex: 1; }
+.orbit-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  background: #34343f; transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+.orbit-btn:hover {
+  transform: translate(-50%, -50%) translateY(-3px);
+  color: var(--text); border-color: var(--line-red);
+  box-shadow: 0 7px 0 -1px rgba(0,0,0,0.5), 0 20px 34px -18px var(--red-glow);
+}
+.orbit-btn:active { transform: translate(-50%, -50%) translateY(2px); }
+.orbit-btn:disabled { opacity: 0.5; cursor: default; }
+
+/* aplicado */
+.orbit-btn.on {
+  color: #fff; border-color: rgba(225,6,0,0.5);
+  background: linear-gradient(180deg, rgba(45,16,18,0.95), rgba(18,10,12,0.95));
+  box-shadow: 0 4px 0 -1px rgba(0,0,0,0.5), 0 0 26px -8px var(--red-glow);
+}
+.orbit-btn.on .orbit-dot { background: var(--red); box-shadow: 0 0 10px var(--red); }
+
+/* ---------- acoes gerais ---------- */
+.pf-bottom {
+  position: absolute; left: 50%; bottom: 24px; transform: translateX(-50%);
+  z-index: 4; display: flex; gap: 11px;
 }
 
-/* palco 3D */
-.pf-stage { position: relative; height: 300px; }
-.pf-stage canvas {
-  position: relative; z-index: 1;
-  width: 100%; height: 100%; display: block;
-}
-.pf-stage-glow {
-  position: absolute; left: 50%; top: 58%; transform: translate(-50%, -50%);
-  width: 78%; aspect-ratio: 1.6/1; border-radius: 50%;
-  background: radial-gradient(circle, var(--red-glow) 0%, transparent 68%);
-  filter: blur(26px); opacity: 0.5; pointer-events: none;
+@media (max-width: 1180px) {
+  .orbit-btn { width: 150px; font-size: 11px; padding: 9px 12px; }
+  .pf-model { width: min(34%, 360px); }
 }
 
-/* copy */
-.pf-badge {
-  display: inline-flex; align-items: center; gap: 7px;
-  font-size: 10px; font-weight: 800; letter-spacing: 2.5px;
-  color: var(--red-2); background: rgba(225,6,0,0.10);
-  border: 1px solid rgba(225,6,0,0.30); border-radius: 20px; padding: 6px 13px;
-}
-.pf-badge svg { width: 13px; height: 13px; }
-.pf-title {
-  margin-top: 15px; font-size: 34px; font-weight: 900; font-style: italic;
-  line-height: 1.02; letter-spacing: -1px; color: #fff;
-}
-.pf-title span { color: var(--red-2); text-shadow: 0 0 26px var(--red-glow); }
-.pf-sub {
-  margin-top: 12px; max-width: 460px;
-  font-size: 13px; line-height: 1.6; color: var(--muted);
-}
-
-/* medidor (anel + texto) */
-.pf-meter { display: flex; align-items: center; gap: 14px; margin-top: 20px; }
-.pf-ring {
-  width: 74px; height: 74px; border-radius: 50%; flex-shrink: 0;
-  display: grid; place-items: center;
-  background: conic-gradient(var(--red) 0%, #1d1d24 0);
-  transition: background 0.6s ease;
-  box-shadow: 0 0 22px -6px var(--red-glow);
-}
-.pf-ring-in {
-  width: 58px; height: 58px; border-radius: 50%;
-  background: var(--bg-2); border: 1px solid var(--line);
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-}
-.pf-ring-in b { font-size: 16px; font-weight: 800; color: #fff; line-height: 1; }
-.pf-ring-in span { font-size: 8px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
-.pf-meter-txt b { display: block; font-size: 15px; font-weight: 700; color: #fff; }
-.pf-meter-txt span { font-size: 11px; color: var(--muted); }
-
-.pf-actions { display: flex; gap: 11px; margin-top: 22px; flex-wrap: wrap; }
+/* credito de licenca (CC-BY do modelo 3D) */
+.credits { font-size: 11px; color: var(--muted); line-height: 1.5; padding: 4px 2px; }
+.credits b { color: #b9b9c4; font-weight: 600; }
 
 /* ---------- botoes 3D (extrusao real via sombra solida) ---------- */
 .btn3d {
@@ -455,28 +477,4 @@ body {
     0 1px 0 -1px #6b0200,
     0 8px 18px -10px var(--red-glow),
     inset 0 1px 0 rgba(255,255,255,0.18);
-}
-
-/* ---------- cards do PrecisionFix com profundidade 3D ---------- */
-.pf-grid { perspective: 1100px; }
-.pf-grid .card {
-  transform-style: preserve-3d;
-  box-shadow: 0 4px 0 -1px rgba(0,0,0,0.55), 0 10px 22px -14px rgba(0,0,0,0.9);
-  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
-}
-.pf-grid .card:hover {
-  transform: translateY(-6px) rotateX(6deg) scale(1.015);
-  border-color: var(--line-red);
-  box-shadow:
-    0 8px 0 -1px rgba(0,0,0,0.55),
-    0 26px 44px -20px var(--red-glow);
-}
-
-@media (max-width: 1040px) {
-  .pf-hero-inner { grid-template-columns: 1fr; }
-  .pf-stage { height: 240px; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .pf-ring, .btn3d, .pf-grid .card { transition: none; }
 }

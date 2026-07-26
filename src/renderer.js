@@ -9,7 +9,7 @@ function log(text) {
 }
 window.api.onLog((t) => log(t));
 
-function setBusy(b) { document.querySelectorAll(".btn,.btn3d,.perf-btn,.tw-switch,.game-switch").forEach((x) => (x.disabled = b)); }
+function setBusy(b) { document.querySelectorAll(".btn,.btn3d,.orbit-btn,.perf-btn,.tw-switch,.game-switch").forEach((x) => (x.disabled = b)); }
 async function withBusy(fn) {
   setBusy(true);
   try { await fn(); } catch (e) { log("Erro: " + (e && e.message ? e.message : e)); }
@@ -107,6 +107,7 @@ async function refreshStatus() {
     const st = await window.api.tweakStatus();
     const ts = new Set(st.tweaks || []), gs = new Set(st.games || []);
     document.querySelectorAll(".tw-switch").forEach((s) => (s.checked = ts.has(s.dataset.id)));
+    document.querySelectorAll(".orbit-btn").forEach((b) => b.classList.toggle("on", ts.has(b.dataset.id)));
     document.querySelectorAll(".game-switch").forEach((s) => (s.checked = gs.has(s.dataset.name)));
     const n = (st.tweaks || []).length;
     const total = st.total || 0;
@@ -117,12 +118,6 @@ async function refreshStatus() {
     if (pp) pp.textContent = pct + "%";
     if (pc) pc.textContent = total > 0 ? `${n} de ${total} tweaks ativos` : "—";
     if (pr) pr.style.background = `conic-gradient(var(--red) ${pct}%, #1d1d24 0)`;
-    // hero do PrecisionFix (anel + brilho da cena 3D)
-    const fp = $("#pfPct"), fc = $("#pfCount"), fr = $("#pfRing");
-    if (fp) fp.textContent = pct + "%";
-    if (fc) fc.textContent = total > 0 ? `${n} / ${total}` : "—";
-    if (fr) fr.style.background = `conic-gradient(var(--red) ${pct}%, #1d1d24 0)`;
-    if (window.pfSetLevel) window.pfSetLevel(pct / 100);
   } catch (e) {}
 }
 
@@ -154,6 +149,58 @@ function makeCard(t) {
   }
   return card;
 }
+// Botoes dos tweaks de precisao distribuidos em arco ao redor do mouse 3D.
+// Metade em cada lado; a posicao sai de uma elipse (so os arcos laterais, pra
+// nao passar por cima do modelo).
+function buildOrbit(tweaks) {
+  const orbit = $("#pf-orbit");
+  if (!orbit) return;
+  orbit.innerHTML = "";
+
+  const n = tweaks.length;
+  const half = Math.ceil(n / 2);
+  const SPREAD = 136; // graus de abertura do arco de cada lado
+
+  tweaks.forEach((t, i) => {
+    const isLeft = i >= half;
+    const idx = isLeft ? i - half : i;
+    const count = (isLeft ? n - half : half) || 1;
+    const deg = -SPREAD / 2 + SPREAD * (count > 1 ? idx / (count - 1) : 0.5);
+    const a = (deg * Math.PI) / 180;
+    const x = 50 + (isLeft ? -1 : 1) * Math.cos(a) * 32;
+    const y = 50 + Math.sin(a) * 40;
+
+    const b = document.createElement("button");
+    b.className = "orbit-btn" + (isLeft ? " left" : "");
+    b.dataset.id = t.id;
+    b.style.left = x + "%";
+    b.style.top = y + "%";
+    b.title = t.desc || t.name;
+    b.innerHTML = `<i class="orbit-dot"></i><span>${t.name}</span>`;
+
+    b.addEventListener("click", () => withBusy(async () => {
+      // acao pontual (sem reverter) x tweak liga/desliga
+      if (t.action) {
+        if (t.confirm && !window.confirm(t.confirm)) return;
+        handleResult(await window.api.apply(t.id), `Ação executada: ${t.name}`);
+        return;
+      }
+      const on = !b.classList.contains("on");
+      const res = on ? await window.api.apply(t.id) : await window.api.revert(t.id);
+      const ok = handleResult(res, `${on ? "Aplicado" : "Revertido"}: ${t.name}`);
+      if (ok) {
+        b.classList.toggle("on", on);
+        if (on && t.note && /reinici/i.test(t.note) && rebootNotifOn()) {
+          notify(`${t.name} exige reiniciar o PC.`, "warn");
+        }
+      }
+      await refreshStatus();
+    }));
+
+    orbit.appendChild(b);
+  });
+}
+
 function makeGameCard(g) {
   const card = document.createElement("div");
   card.className = "card card-game";
@@ -196,8 +243,8 @@ function buildWindows(winTweaks) {
 
 // ---------------- catálogo ----------------
 async function loadCatalog() {
-  const gp = $("#screen-precision .grid"), gs = $("#screen-system .grid"), gl = $("#gamesList");
-  [gp, gs, gl].forEach((g) => g && (g.innerHTML = ""));
+  const gs = $("#screen-system .grid"), gl = $("#gamesList");
+  [gs, gl].forEach((g) => g && (g.innerHTML = ""));
   const cat = await window.api.catalog();
   if (!cat || !cat.ok) {
     if (cat && cat.offline) notify("Sem conexão com o servidor — recursos indisponíveis.", "warn");
@@ -206,7 +253,9 @@ async function loadCatalog() {
   }
   // o plano que vale é o que o servidor mandou junto do catálogo
   if (cat.plan) applyPlan(cat.plan);
-  const grids = { precision: gp, system: gs };
+  // precision = botoes em orbita do mouse 3D; o resto continua em cards
+  buildOrbit(cat.tweaks.filter((t) => t.cat === "precision"));
+  const grids = { system: gs };
   cat.tweaks.forEach((t) => grids[t.cat] && grids[t.cat].appendChild(makeCard(t)));
   buildWindows(cat.tweaks.filter((t) => t.cat === "windows"));
   (cat.games || []).forEach((g) => gl.appendChild(makeGameCard(g)));
