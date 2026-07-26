@@ -155,14 +155,50 @@
 
         <!-- PRECISION -->
         <section class="screen" id="screen-precision">
-          <div class="toolbar">
-            <h2 class="screen-title">PrecisionFix</h2>
-            <div class="toolbar-actions">
-              <button class="btn btn-primary" data-applyall="precision">APLICAR TUDO</button>
-              <button class="btn btn-ghost" data-revertall="precision">REVERTER TUDO</button>
+          <!-- HERO: cena 3D do mouse + ações -->
+          <div class="pf-hero">
+            <div id="pf-bg" class="pf-bg"></div>
+
+            <div class="pf-hero-inner">
+              <!-- palco 3D (three.js) -->
+              <div class="pf-stage">
+                <div class="pf-stage-glow"></div>
+                <canvas id="pf-mouse"></canvas>
+              </div>
+
+              <!-- copy + ações -->
+              <div class="pf-copy">
+                <span class="pf-badge"><i data-lucide="crosshair"></i> PRECISION FIX</span>
+                <h2 class="pf-title">Sua mira,<br><span>calibrada.</span></h2>
+                <p class="pf-sub">
+                  Mouse 1:1, teclado sem atraso e timers de kernel afinados.
+                  Aplique tudo num clique ou ajuste tweak por tweak abaixo.
+                </p>
+
+                <div class="pf-meter">
+                  <div class="pf-ring" id="pfRing">
+                    <div class="pf-ring-in"><b id="pfPct">0%</b><span>ativo</span></div>
+                  </div>
+                  <div class="pf-meter-txt">
+                    <b id="pfCount">—</b>
+                    <span>tweaks de precisão aplicados</span>
+                  </div>
+                </div>
+
+                <div class="pf-actions">
+                  <button class="btn3d btn3d-primary" data-applyall="precision">
+                    <i data-lucide="zap"></i> APLICAR TUDO
+                  </button>
+                  <button class="btn3d" data-revertall="precision">
+                    <i data-lucide="rotate-ccw"></i> REVERTER
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-          <div class="grid"></div>
+
+          <h3 class="section-h">Tweaks de precisão</h3>
+          <div class="grid pf-grid"></div>
         </section>
 
         <!-- WINDOWS -->
@@ -320,6 +356,11 @@
   </div>
 
   <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- 3D do PrecisionFix (three.js + Vanta). Se nao carregar (offline), a tela
+       funciona normal, so sem a cena/fundo animado. -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vanta@0.5.24/dist/vanta.net.min.js"></script>
   <script src="renderer.js"></script>
+  <script src="mouse3d.js"></script>
 </body>
 </html>

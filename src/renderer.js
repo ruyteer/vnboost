@@ -9,7 +9,7 @@ function log(text) {
 }
 window.api.onLog((t) => log(t));
 
-function setBusy(b) { document.querySelectorAll(".btn,.perf-btn,.tw-switch,.game-switch").forEach((x) => (x.disabled = b)); }
+function setBusy(b) { document.querySelectorAll(".btn,.btn3d,.perf-btn,.tw-switch,.game-switch").forEach((x) => (x.disabled = b)); }
 async function withBusy(fn) {
   setBusy(true);
   try { await fn(); } catch (e) { log("Erro: " + (e && e.message ? e.message : e)); }
@@ -117,6 +117,12 @@ async function refreshStatus() {
     if (pp) pp.textContent = pct + "%";
     if (pc) pc.textContent = total > 0 ? `${n} de ${total} tweaks ativos` : "—";
     if (pr) pr.style.background = `conic-gradient(var(--red) ${pct}%, #1d1d24 0)`;
+    // hero do PrecisionFix (anel + brilho da cena 3D)
+    const fp = $("#pfPct"), fc = $("#pfCount"), fr = $("#pfRing");
+    if (fp) fp.textContent = pct + "%";
+    if (fc) fc.textContent = total > 0 ? `${n} / ${total}` : "—";
+    if (fr) fr.style.background = `conic-gradient(var(--red) ${pct}%, #1d1d24 0)`;
+    if (window.pfSetLevel) window.pfSetLevel(pct / 100);
   } catch (e) {}
 }
 
