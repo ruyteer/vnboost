@@ -153,10 +153,10 @@ function makeTweakItem(t, side) {
   b.className = "tw-item " + side;
   b.dataset.id = t.id;
   b.title = t.desc || t.name;
-  // o switch fica sempre do lado de dentro (perto do modelo)
-  const sw = '<i class="tw-sw"></i>';
+  // o checkbox fica sempre do lado de dentro (perto do modelo)
+  const box = '<i class="tw-check"></i>';
   const label = `<span>${t.name}</span>`;
-  b.innerHTML = side === "left" ? label + sw : sw + label;
+  b.innerHTML = side === "left" ? label + box : box + label;
 
   b.addEventListener("click", () => withBusy(async () => {
     // acao pontual (sem reverter) x tweak liga/desliga

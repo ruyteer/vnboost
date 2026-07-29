@@ -9,9 +9,15 @@
   --green: #28c840; --yellow: #febc2e;
   --font: 'Poppins', 'Segoe UI', system-ui, sans-serif;
 }
+/* a janela e transparent+frameless: o arredondado do painel vem daqui.
+   O clip precisa valer no html E no body, senao filhos com fundo proprio
+   (a arena, por ex.) vazam por cima do canto e ele fica quadrado. */
 html, body { height: 100%; }
-/* a janela e transparent+frameless: o arredondado do painel vem daqui */
-html { background: transparent; }
+html {
+  background: transparent;
+  border-radius: 14px;
+  overflow: hidden;
+}
 body {
   font-family: var(--font);
   background:
@@ -19,12 +25,19 @@ body {
     radial-gradient(800px 400px at -5% 110%, rgba(225,6,0,0.10), transparent 55%),
     var(--bg);
   color: var(--text);
-  display: flex; flex-direction: column; height: 100vh; overflow: hidden; user-select: none;
+  display: flex; flex-direction: column; height: 100vh; user-select: none;
   border-radius: 14px;
+  overflow: hidden;
+  isolation: isolate; /* garante que o clip do radius pegue os filhos */
   border: 1px solid rgba(255,255,255,0.07);
 }
 /* maximizada encosta na borda da tela: sem arredondado */
-body.maximized { border-radius: 0; border-color: transparent; }
+body.maximized, html:has(body.maximized) { border-radius: 0; }
+body.maximized { border-color: transparent; }
+
+/* fundo animado global: atras de tudo, inclusive da sidebar */
+#app-bg { position: fixed; inset: 0; z-index: 0; opacity: 0; transition: opacity 0.5s ease; }
+body.bg-on #app-bg { opacity: 0.4; }
 
 /* Titlebar */
 .titlebar { -webkit-app-region: drag; height: 38px; display: flex; align-items: center; gap: 14px;
@@ -39,7 +52,7 @@ body.maximized { border-radius: 0; border-color: transparent; }
 .titlebar-spacer { flex: 1; }
 
 /* Layout */
-.app { flex: 1; display: flex; overflow: hidden; }
+.app { flex: 1; display: flex; overflow: hidden; position: relative; z-index: 1; }
 
 /* Sidebar */
 .sidebar { width: 230px; flex-shrink: 0; background: transparent;
@@ -315,19 +328,13 @@ body.maximized { border-radius: 0; border-color: transparent; }
   position: relative;
   /* cancela o padding do .screens pra ocupar a tela toda */
   margin: -22px -26px;
-  min-height: calc(100vh - 84px);
-  padding: 26px 34px 40px;
+  min-height: calc(100vh - 40px);
+  padding: 22px 30px 34px;
   overflow: hidden;
   display: flex; flex-direction: column;
 }
 
 /* fundo animado cobrindo tudo */
-.pf-bg { position: absolute; inset: 0; z-index: 0; opacity: 0.34; }
-.pf-arena::after {
-  content: "";
-  position: absolute; inset: 0; z-index: 1; pointer-events: none;
-  background: radial-gradient(88% 68% at 50% 48%, transparent 38%, rgba(10,10,12,0.86) 100%);
-}
 
 /* cabecalho */
 .pf-head { position: relative; z-index: 2; margin-bottom: 6px; }
@@ -337,15 +344,15 @@ body.maximized { border-radius: 0; border-color: transparent; }
 /* colunas: [tweaks] [modelo] [tweaks] */
 .pf-cols {
   position: relative; z-index: 2; flex: 1;
-  display: grid; grid-template-columns: 1fr minmax(260px, 440px) 1fr;
-  align-items: center; gap: 22px;
+  display: grid; grid-template-columns: 1fr minmax(300px, 520px) 1fr;
+  align-items: center; gap: 26px;
 }
 .pf-col { display: flex; flex-direction: column; gap: 13px; }
 .pf-col.left { align-items: flex-end; }
 .pf-col.right { align-items: flex-start; }
 
 /* ---------- modelo 3D ---------- */
-.pf-model { position: relative; width: 100%; aspect-ratio: 1 / 1; max-height: 62vh; }
+.pf-model { position: relative; width: 100%; aspect-ratio: 1 / 1; max-height: 66vh; }
 .pf-model.wide { aspect-ratio: 4 / 3; }
 .pf-model model-viewer {
   position: relative; z-index: 1;
@@ -369,46 +376,54 @@ body.maximized { border-radius: 0; border-color: transparent; }
 }
 .pf-hint svg { width: 13px; height: 13px; }
 
-/* ---------- item de tweak: so borda, texto e switch ---------- */
+/* ---------- item de tweak: label + checkbox, sem caixa em volta ---------- */
 .tw-item {
-  display: flex; align-items: center; gap: 11px;
-  width: 214px; padding: 10px 13px;
-  border-radius: 10px; cursor: pointer;
-  font-family: var(--font); font-size: 12px; font-weight: 500; line-height: 1.25;
-  color: var(--muted);
-  background: transparent;
-  border: 1px solid rgba(255,255,255,0.10);
-  backdrop-filter: blur(3px);
-  transition: border-color 0.18s ease, color 0.18s ease;
+  display: flex; align-items: center; gap: 14px;
+  width: 250px; padding: 0;
+  background: none; border: none; cursor: pointer;
+  font-family: var(--font); font-size: 11.5px; font-weight: 700;
+  letter-spacing: 1.1px; text-transform: uppercase; line-height: 1.3;
+  color: #9a9aa5;
+  transition: color 0.18s ease;
 }
-.tw-item.left { text-align: left; }
-.tw-item.right { text-align: right; }
+.tw-item.left { text-align: right; }   /* label encosta no modelo */
+.tw-item.right { text-align: left; }
 .tw-item span { flex: 1; }
-.tw-item:hover { color: var(--text); border-color: rgba(225,6,0,0.45); }
+.tw-item:hover { color: #fff; }
 .tw-item:disabled { opacity: 0.45; cursor: default; }
 
-/* switch: visual puro, o estado vem da classe .on do proprio botao */
-.tw-sw {
+/* checkbox: quadrado, o estado vem da classe .on do proprio botao */
+.tw-check {
   position: relative; flex-shrink: 0;
-  width: 30px; height: 17px; border-radius: 20px;
-  border: 1px solid rgba(255,255,255,0.16); background: transparent;
-  transition: border-color 0.2s ease, background 0.2s ease;
+  width: 27px; height: 27px; border-radius: 8px;
+  border: 1.5px solid rgba(255,255,255,0.16);
+  background: rgba(255,255,255,0.03);
+  transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
 }
-.tw-sw::after {
-  content: ""; position: absolute; top: 2px; left: 2px;
-  width: 11px; height: 11px; border-radius: 50%;
-  background: #55555f;
-  transition: left 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+/* o "check" desenhado com borda (sem depender de fonte/icone) */
+.tw-check::after {
+  content: "";
+  position: absolute; left: 9px; top: 4.5px;
+  width: 6px; height: 12px;
+  border: solid #fff; border-width: 0 2.5px 2.5px 0;
+  transform: rotate(45deg) scale(0);
+  transition: transform 0.18s ease;
 }
+.tw-item:hover .tw-check { border-color: rgba(255,255,255,0.35); }
 
 /* aplicado */
-.tw-item.on { color: #fff; border-color: rgba(225,6,0,0.42); }
-.tw-item.on .tw-sw { border-color: rgba(225,6,0,0.6); background: rgba(225,6,0,0.14); }
-.tw-item.on .tw-sw::after { left: 15px; background: var(--red); box-shadow: 0 0 9px var(--red); }
+.tw-item.on { color: #fff; }
+.tw-item.on .tw-check {
+  background: var(--green); border-color: var(--green);
+  box-shadow: 0 0 16px -2px rgba(40,200,64,0.55);
+}
+.tw-item.on .tw-check::after { transform: rotate(45deg) scale(1); }
 
 @media (max-width: 1180px) {
-  .pf-cols { grid-template-columns: 1fr minmax(200px, 320px) 1fr; gap: 14px; }
-  .tw-item { width: 178px; font-size: 11px; padding: 9px 11px; }
+  .pf-cols { grid-template-columns: 1fr minmax(240px, 380px) 1fr; gap: 16px; }
+  .tw-item { width: 200px; font-size: 10.5px; gap: 11px; }
+  .tw-check { width: 24px; height: 24px; }
+  .tw-check::after { left: 8px; top: 4px; width: 5px; height: 10.5px; }
 }
 
 
