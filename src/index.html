@@ -50,9 +50,10 @@
         <button class="nav-item active" data-screen="dashboard" data-planonly="full"><i data-lucide="layout-dashboard"></i> Dashboard</button>
         <button class="nav-item" data-screen="precision" data-planonly="precision"><i data-lucide="mouse-pointer-2"></i> PrecisionFix</button>
         <button class="nav-item" data-screen="teclado" data-planonly="precision"><i data-lucide="keyboard"></i> TecladoFix</button>
+        <button class="nav-item" data-screen="treino" data-planonly="precision"><i data-lucide="crosshair"></i> Treino de Mira</button>
         <button class="nav-item" data-screen="windows" data-planonly="full"><i data-lucide="monitor"></i> Windows</button>
         <button class="nav-item" data-screen="jogos" data-planonly="full"><i data-lucide="gamepad-2"></i> Jogos</button>
-        <button class="nav-item" data-screen="fivem" data-planonly="full"><i data-lucide="rocket"></i> FiveM</button>
+        <button class="nav-item" data-screen="fivem"><i data-lucide="rocket"></i> FiveM</button>
         <button class="nav-item" data-screen="system" data-planonly="full"><i data-lucide="wrench"></i> Sistema</button>
         <button class="nav-item" data-screen="notifs" data-planonly="full"><i data-lucide="bell"></i> Notificações <span id="notifBadge" class="badge" hidden>0</span></button>
         <button class="nav-item" data-screen="config"><i data-lucide="settings"></i> Configurações</button>
@@ -286,6 +287,52 @@
           </div>
         </section>
 
+        <!-- TREINO DE MIRA -->
+        <section class="screen" id="screen-treino">
+          <div class="toolbar">
+            <h2 class="screen-title">Treino de Mira</h2>
+            <span class="toolbar-info" id="aimDica"></span>
+          </div>
+
+          <div class="aim-wrap">
+            <div class="aim-stage">
+              <canvas id="aimCanvas"></canvas>
+
+              <div class="aim-hud">
+                <div><b id="hudTempo">30</b><span>segundos</span></div>
+                <div><b id="hudAcertos">0</b><span id="hudAcertosLbl">acertos</span></div>
+                <div><b id="hudPrec">—</b><span id="hudPrecLbl">precisão</span></div>
+                <div><b id="hudRt">—</b><span>reação</span></div>
+              </div>
+
+              <div class="aim-overlay" id="aimOverlay">
+                <h3 id="aimOverTitle">Clique pra começar</h3>
+                <p id="aimOverText">O cursor fica preso na área. <b>ESC</b> sai a qualquer momento.</p>
+              </div>
+            </div>
+
+            <aside class="aim-side">
+              <div class="aim-card">
+                <h4 class="mini-h">Modo</h4>
+                <div class="aim-opts" id="aimModos"></div>
+                <h4 class="mini-h">Duração</h4>
+                <div class="aim-opts" id="aimDur"></div>
+                <label class="aim-range">
+                  <span>Sensibilidade <b id="aimSensVal">1.00</b></span>
+                  <input id="aimSens" type="range" min="0.2" max="3" step="0.05" value="1">
+                </label>
+              </div>
+
+              <div class="aim-card">
+                <h4 class="mini-h">Diagnóstico do mouse</h4>
+                <div class="aim-diag" id="aimDiag"></div>
+              </div>
+            </aside>
+          </div>
+
+          <div class="aim-feedback" id="aimFeedback"></div>
+        </section>
+
         <!-- SISTEMA -->
         <section class="screen" id="screen-system">
           <div class="toolbar">
@@ -349,5 +396,6 @@
   <script src="https://cdn.jsdelivr.net/npm/vanta@0.5.24/dist/vanta.net.min.js"></script>
   <script src="renderer.js"></script>
   <script src="precision-bg.js"></script>
+  <script src="aim-trainer.js"></script>
 </body>
 </html>
