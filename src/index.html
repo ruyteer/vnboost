@@ -47,7 +47,7 @@
         <div id="navLogoFallback" class="nav-logo-fallback">VN<span>BOOST</span></div>
       </div>
       <nav class="nav">
-        <button class="nav-item active" data-screen="dashboard"><i data-lucide="layout-dashboard"></i> Dashboard</button>
+        <button class="nav-item active" data-screen="dashboard" data-planonly="full"><i data-lucide="layout-dashboard"></i> Dashboard</button>
         <button class="nav-item" data-screen="precision" data-planonly="precision"><i data-lucide="mouse-pointer-2"></i> PrecisionFix</button>
         <button class="nav-item" data-screen="teclado" data-planonly="precision"><i data-lucide="keyboard"></i> TecladoFix</button>
         <button class="nav-item" data-screen="windows" data-planonly="full"><i data-lucide="monitor"></i> Windows</button>
@@ -69,36 +69,6 @@
             <button id="restorePoint" class="btn btn-ghost btn-sm">Criar ponto de restauração</button>
           </div>
 
-          <!-- DASHBOARD · PRECISION (PVP Edition) -->
-          <div id="dashPrecision" hidden>
-            <div class="pvp-hero">
-              <div class="pvp-hero-main">
-                <span class="pvp-badge"><i data-lucide="crosshair"></i> PVP EDITION</span>
-                <h1 class="pvp-title">PRECISION<span>FIX</span></h1>
-                <p class="pvp-sub">
-                  Resposta 1:1 de mouse, teclado sem atraso e timers de kernel afinados.
-                  Sem fumaça, sem enrolação — só o que muda a sua mira.
-                </p>
-                <div class="pvp-actions">
-                  <button id="pvpActivate" class="btn btn-primary pvp-cta">ATIVAR PRECISION FIX</button>
-                  <button class="btn btn-ghost" data-go="precision">VER TWEAKS</button>
-                </div>
-              </div>
-              <div class="pvp-hero-side">
-                <div class="pvp-ring" id="pvpRing">
-                  <div class="pvp-ring-in">
-                    <b id="pvpPct">0%</b>
-                    <span>ativo</span>
-                  </div>
-                </div>
-                <div class="pvp-count" id="pvpCount">—</div>
-              </div>
-            </div>
-
-          </div>
-
-          <!-- DASHBOARD · FULL -->
-          <div id="dashFull">
           <div class="metrics">
             <div class="metric">
               <div class="metric-top"><span>CPU</span><span id="cpuPct" class="metric-val">--%</span></div>
@@ -143,7 +113,6 @@
             <button class="perf-btn" data-perf="cache"><i data-lucide="trash-2"></i> Limpar Cache do Windows</button>
             <button class="perf-btn" data-perf="ping"><i data-lucide="wifi"></i> Melhorar Ping</button>
           </div>
-          </div><!-- /dashFull -->
         </section>
 
         <!-- PRECISION · MOUSE: modelo no centro, tweaks em duas colunas -->

@@ -74,21 +74,19 @@ function applyPlan(plan) {
   document.body.classList.toggle("plan-precision", prec);
 
   // Planos separados, sem sobreposição:
-  //  - precision: só Dashboard, PrecisionFix e Config
+  //  - precision: só PrecisionFix, TecladoFix e Config
   //  - full: tudo MENOS PrecisionFix (só otimização)
   document.querySelectorAll('[data-planonly="full"]').forEach((el) => (el.hidden = prec));
   document.querySelectorAll('[data-planonly="precision"]').forEach((el) => (el.hidden = !prec));
 
-  // dashboard: hero PVP x painel completo
-  $("#dashFull").hidden = prec;
-  $("#dashPrecision").hidden = !prec;
-
-  // se estiver numa tela que não existe no plano, volta pro dashboard
+  // Tela inicial de cada plano. No precision o Dashboard não existe (as métricas
+  // são de otimização), então a home é o próprio PrecisionFix.
+  const home = prec ? "precision" : "dashboard";
   const active = document.querySelector(".screen.active");
   if (active) {
-    const fullOnly = ["screen-windows", "screen-jogos", "screen-system", "screen-fivem", "screen-notifs"];
-    if (prec && fullOnly.includes(active.id)) go("dashboard");
-    if (!prec && ["screen-precision", "screen-teclado"].includes(active.id)) go("dashboard");
+    const fullOnly = ["screen-dashboard", "screen-windows", "screen-jogos", "screen-system", "screen-fivem", "screen-notifs"];
+    if (prec && fullOnly.includes(active.id)) go(home);
+    if (!prec && ["screen-precision", "screen-teclado"].includes(active.id)) go(home);
   }
   if (window.lucide) lucide.createIcons();
 }
@@ -105,11 +103,6 @@ async function refreshStatus() {
     const total = st.total || 0;
     const pct = total > 0 ? Math.round((n / total) * 100) : 0;
     const el = $("#activePct"); if (el) el.textContent = pct + "%";
-    // hero da edição PVP
-    const pp = $("#pvpPct"), pc = $("#pvpCount"), pr = $("#pvpRing");
-    if (pp) pp.textContent = pct + "%";
-    if (pc) pc.textContent = total > 0 ? `${n} de ${total} tweaks ativos` : "—";
-    if (pr) pr.style.background = `conic-gradient(var(--red) ${pct}%, #1d1d24 0)`;
   } catch (e) {}
 }
 
@@ -464,10 +457,6 @@ async function init() {
     ping: async () => handleResult(await window.api.apply("ping"), "Ping otimizado."),
   };
   document.querySelectorAll(".perf-btn").forEach((b) => b.addEventListener("click", () => withBusy(perfActions[b.dataset.perf])));
-
-  // CTA do hero da edição PVP
-  const pvpBtn = $("#pvpActivate");
-  if (pvpBtn) pvpBtn.addEventListener("click", () => withBusy(perfActions.precision));
 
   document.querySelectorAll("[data-applyall]").forEach((b) => b.addEventListener("click", () =>
     withBusy(async () => { if (handleResult(await window.api.applyAll(b.dataset.applyall), `Aplicado tudo: ${b.dataset.applyall}`)) await refreshStatus(); })));
