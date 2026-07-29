@@ -407,8 +407,10 @@ body.bg-on #app-bg { opacity: 0.4; }
 .aim-wrap { display: grid; grid-template-columns: 1fr 288px; gap: 18px; align-items: start; }
 
 .aim-stage {
-  position: relative; height: 460px; border-radius: 14px; overflow: hidden;
-  border: 1px solid var(--line); background: #0b0b0e;
+  /* 436px = o que sobra pro relatorio do fim da sessao caber sem scroll */
+  position: relative; height: 436px; border-radius: 14px; overflow: hidden;
+  /* a arena fica opaca de proposito: alvo precisa de fundo limpo */
+  border: 1px solid rgba(255,255,255,0.07); background: #0b0b0e;
 }
 .aim-stage canvas { display: block; width: 100%; height: 100%; cursor: none; }
 
@@ -431,66 +433,52 @@ body.bg-on #app-bg { opacity: 0.4; }
 .aim-overlay p { font-size: 12.5px; color: var(--muted); }
 .aim-overlay b { color: var(--text); }
 
-/* ---------- painel lateral ---------- */
-.aim-side { display: flex; flex-direction: column; gap: 14px; }
-.aim-card { background: var(--panel); border: 1px solid var(--line); border-radius: 13px; padding: 18px; }
-.aim-card .mini-h:not(:first-child) { margin-top: 18px; }
-
-.aim-opts { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+/* ---------- painel lateral: sem caixa, so o conteudo ---------- */
+.aim-side { display: flex; flex-direction: column; gap: 18px; padding-top: 4px; }
+/* o .mini-h padrao traz margem pra dentro de card; aqui quem espaca e o gap */
+.aim-side .mini-h { margin: 0; font-size: 11px; letter-spacing: 1.5px; }
+.aim-opts { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 12px; }
 .aim-opt {
-  flex: 1; min-width: 62px; cursor: pointer; font-family: var(--font);
-  background: var(--panel-2); border: 1px solid var(--line); color: var(--muted);
-  border-radius: 9px; padding: 9px 8px; font-size: 11px; font-weight: 700;
-  letter-spacing: 0.6px; transition: 0.15s;
+  cursor: pointer; font-family: var(--font); padding: 0 0 7px;
+  background: none; border: none; border-bottom: 1.5px solid rgba(255,255,255,0.10);
+  color: #9a9aa5; font-size: 11px; font-weight: 700;
+  letter-spacing: 1.1px; text-transform: uppercase; transition: 0.16s;
 }
-.aim-opt:hover { border-color: var(--line-red); color: var(--text); }
-.aim-opt.on { background: linear-gradient(135deg, var(--red), #a30400); border-color: var(--red); color: #fff; }
+.aim-opt:hover { color: var(--text); border-bottom-color: rgba(255,255,255,0.3); }
+.aim-opt.on { color: #fff; border-bottom-color: var(--red);
+  box-shadow: 0 6px 16px -10px var(--red-glow); }
 
-.aim-range { display: block; margin-top: 20px; font-size: 11.5px; color: var(--muted); font-weight: 600; }
-.aim-range b { color: #fff; float: right; }
-.aim-range input { -webkit-appearance: none; width: 100%; height: 4px; margin-top: 12px;
-  border-radius: 3px; background: var(--panel-2); outline: none; }
+.aim-range { display: block; margin-top: 4px; font-size: 11px; color: var(--muted);
+  font-weight: 700; letter-spacing: 1.1px; text-transform: uppercase; }
+.aim-range b { color: #fff; float: right; letter-spacing: 0; }
+.aim-range input { -webkit-appearance: none; width: 100%; height: 3px; margin-top: 14px;
+  border-radius: 3px; background: rgba(255,255,255,0.12); outline: none; }
 .aim-range input::-webkit-slider-thumb {
-  -webkit-appearance: none; width: 15px; height: 15px; border-radius: 50%;
+  -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%;
   background: var(--red); cursor: pointer; box-shadow: 0 0 10px var(--red-glow);
 }
 
-/* ---------- diagnostico ---------- */
-.aim-diag { margin-top: 10px; }
+/* ---------- diagnostico: linhas soltas ---------- */
+.aim-diag { margin-top: 12px; }
 .diag-linha { display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
-  padding: 8px 0; font-size: 12px; color: var(--muted); border-bottom: 1px solid #1f1f27; }
+  padding: 9px 0; font-size: 11.5px; color: var(--muted);
+  border-bottom: 1px solid rgba(255,255,255,0.055); }
 .diag-linha:last-child { border-bottom: none; }
 .diag-linha b { font-size: 13px; font-weight: 700; color: var(--text); white-space: nowrap; }
 .diag-linha b.ok { color: var(--green); }
 .diag-linha b.warn { color: var(--yellow); }
 .diag-linha b.bad { color: var(--red-2); }
-.diag-vazio { font-size: 12px; color: var(--muted); padding: 10px 0; }
+.diag-vazio { font-size: 11.5px; color: var(--muted); padding: 10px 0; }
 
-/* ---------- resultado + conselhos ---------- */
+/* ---------- relatorio do fim da sessao ---------- */
 .aim-feedback:empty { display: none; }
-.aim-feedback { margin-top: 18px; }
-.aim-resultado { background: var(--panel); border: 1px solid var(--line); border-radius: 13px; padding: 20px 22px; }
-.aim-resultado h3 { font-size: 15px; font-weight: 700; }
-.aim-nums { display: flex; flex-wrap: wrap; gap: 34px; margin-top: 16px; }
-.aim-nums b { display: block; font-size: 26px; font-weight: 800; color: #fff; line-height: 1.1; }
-.aim-nums span { font-size: 10px; letter-spacing: 1.3px; text-transform: uppercase; color: var(--muted); }
-
-.aim-conselhos { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; margin-top: 14px; }
-.conselho { background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--line);
-  border-radius: 11px; padding: 16px 18px; }
-.conselho.ok { border-left-color: var(--green); }
-.conselho.warn { border-left-color: var(--yellow); }
-.conselho.bad { border-left-color: var(--red); }
-.conselho-top { display: flex; align-items: center; gap: 10px; }
-.conselho-top b { font-size: 13.5px; flex: 1; }
-.conselho-tag { font-size: 9px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase;
-  padding: 3px 8px; border-radius: 20px; background: #2a2a33; color: var(--muted); }
-.conselho.ok .conselho-tag { background: rgba(40,200,64,0.15); color: var(--green); }
-.conselho.warn .conselho-tag { background: rgba(254,188,46,0.15); color: var(--yellow); }
-.conselho.bad .conselho-tag { background: rgba(225,6,0,0.15); color: var(--red-2); }
-.conselho p { margin-top: 9px; font-size: 12.5px; line-height: 1.6; color: var(--muted); }
-.conselho p b { color: var(--text); }
-.conselho .btn-sm { margin-top: 14px; padding: 8px 14px; font-size: 10.5px; }
+.aim-feedback { margin-top: 22px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.07); }
+.aim-res-h { font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+  text-transform: uppercase; color: var(--muted); }
+.aim-nums { display: flex; flex-wrap: wrap; gap: 46px; margin-top: 18px; }
+.aim-nums b { display: block; font-size: 30px; font-weight: 800; color: #fff; line-height: 1.05; }
+.aim-nums span { display: block; margin-top: 4px; font-size: 9.5px; letter-spacing: 1.4px;
+  text-transform: uppercase; color: var(--muted); }
 
 @media (max-width: 1180px) {
   .aim-wrap { grid-template-columns: 1fr; }

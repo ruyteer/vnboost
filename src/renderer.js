@@ -252,27 +252,9 @@ async function loadCatalog() {
   buildWindows(cat.tweaks.filter((t) => t.cat === "windows"));
   (cat.games || []).forEach((g) => gl.appendChild(makeGameCard(g)));
   $("#gameCount").textContent = `${(cat.games || []).length} jogos`;
-  CATALOGO = cat.tweaks;
   await refreshStatus();
   log(`Catálogo carregado: ${cat.tweaks.length} tweaks + ${(cat.games || []).length} jogos (plano ${PLAN}).`);
 }
-
-// O treino de mira sugere tweaks no diagnóstico e aplica pelo mesmo caminho
-// dos botões normais (inclusive o aviso de reboot). Devolve se deu certo.
-let CATALOGO = [];
-window.vnAplicarTweak = async function (id) {
-  const t = CATALOGO.find((x) => x.id === id);
-  if (!t) return false;
-  let ok = false;
-  await withBusy(async () => {
-    ok = handleResult(await window.api.apply(id), `Aplicado: ${t.name}`);
-    if (ok && t.note && /reinici/i.test(t.note) && rebootNotifOn()) {
-      notify(`${t.name} exige reiniciar o PC.`, "warn");
-    }
-    if (ok) await refreshStatus();
-  });
-  return ok;
-};
 
 // ---------------- licença ----------------
 let HWID = "";

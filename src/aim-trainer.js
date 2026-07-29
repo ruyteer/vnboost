@@ -265,9 +265,8 @@
     rodando = false;
     cancelAnimationFrame(raf);
     if (document.pointerLockElement === cv) document.exitPointerLock();
-    const a = analisar();
     salvarRecorde();
-    mostrarResultado(a);
+    mostrarResultado();
     diagAoVivo();
   }
 
@@ -298,7 +297,7 @@
   }
 
   // ---------------- resultado + conselhos ----------------
-  function mostrarResultado(a) {
+  function mostrarResultado() {
     const total = acertos + erros;
     const prec = total ? Math.round((acertos / total) * 100) : 0;
     const rec = getRecordes()[modo + "_" + duracao];
@@ -310,83 +309,14 @@
       : [["Acertos", String(acertos)],
          ["Precisão", prec + "%"],
          ["Reação média", reacoes.length ? Math.round(media(reacoes)) + "ms" : "—"],
-         ["Alvos/min", Math.round(acertos / (duracao / 60)) + ""],
+         ["Alvos/min", String(Math.round(acertos / (duracao / 60)))],
          ["Recorde", String(rec || 0)]];
 
-    const conselhos = aconselhar(a);
     $("#aimFeedback").innerHTML = `
-      <div class="aim-resultado">
-        <h3>Fim do treino — ${MODOS[modo].nome}</h3>
-        <div class="aim-nums">${resumo.map(([k, v]) => `<div><b>${v}</b><span>${k}</span></div>`).join("")}</div>
-      </div>
-      <div class="aim-conselhos">${conselhos.map(cardConselho).join("")}</div>`;
+      <h3 class="aim-res-h">Fim do treino — ${MODOS[modo].nome}</h3>
+      <div class="aim-nums">${resumo.map(([k, v]) => `<div><b>${v}</b><span>${k}</span></div>`).join("")}</div>`;
 
-    $("#aimFeedback").querySelectorAll("[data-tweak]").forEach((b) =>
-      b.addEventListener("click", async () => {
-        b.disabled = true;
-        const ok = await (window.vnAplicarTweak ? window.vnAplicarTweak(b.dataset.tweak) : false);
-        b.textContent = ok ? "APLICADO" : "FALHOU";
-        if (!ok) b.disabled = false;
-      }));
-
-    mostrarOverlay("Treino concluído", "Veja o diagnóstico abaixo. Clique pra treinar de novo.");
-  }
-
-  const cardConselho = (c) => `
-    <div class="conselho ${c.nivel}">
-      <div class="conselho-top"><b>${c.titulo}</b><span class="conselho-tag">${
-        c.nivel === "bad" ? "corrigir" : c.nivel === "warn" ? "atenção" : "ok"}</span></div>
-      <p>${c.texto}</p>
-      ${c.tweak ? `<button class="btn btn-primary btn-sm" data-tweak="${c.tweak}">${c.acao}</button>` : ""}
-    </div>`;
-
-  /* As mensagens abaixo so falam do que da pra medir por software. Click-to-photon
-     (clique ate o pixel mudar) exige hardware; nao inventamos esse numero. */
-  function aconselhar(a) {
-    const out = [];
-
-    if (a.amostras < 300) {
-      out.push({ nivel: "warn", titulo: "Poucos dados de movimento",
-        texto: "Treine uma sessão inteira mexendo o mouse pra medição do polling ficar confiável." });
-      return out;
-    }
-
-    if (a.nominal <= 125) {
-      out.push({ nivel: "bad", titulo: `Mouse reportando ~${a.nominal} Hz`,
-        texto: `Cada relatório chega a cada ${a.intervalo.toFixed(1)} ms, o que sozinho já adiciona <b>~${(a.intervalo / 2).toFixed(1)} ms</b> de atraso médio. Suba o polling pra 1000 Hz no software do mouse (G HUB, Synapse, iCUE…). Isso é firmware do mouse — nenhum tweak de registro resolve.` });
-    } else if (a.nominal <= 250) {
-      out.push({ nivel: "warn", titulo: `Mouse reportando ~${a.nominal} Hz`,
-        texto: `Dá pra melhorar: em 1000 Hz o atraso médio cai de ${(a.intervalo / 2).toFixed(1)} ms pra ~0,5 ms. Ajuste no software do mouse.` });
-    } else {
-      out.push({ nivel: "ok", titulo: `Polling em ~${a.nominal} Hz`,
-        texto: `O mouse está reportando no ritmo certo (${a.intervalo.toFixed(2)} ms entre relatórios). Nada a fazer aqui.` });
-    }
-
-    if (a.instavel >= 0.3) {
-      out.push({ nivel: "bad", titulo: "Polling instável",
-        texto: `${Math.round(a.instavel * 100)}% dos relatórios chegaram fora do ritmo. Quase sempre é porta USB: tire de hub e de extensor, troque pra uma porta traseira e evite dividir o controlador com headset/webcam.`,
-        tweak: "flick", acao: "DESLIGAR SUSPENSÃO DE USB" });
-    } else if (a.instavel >= 0.15) {
-      out.push({ nivel: "warn", titulo: "Pequena variação no polling",
-        texto: `${Math.round(a.instavel * 100)}% dos relatórios saíram do ritmo. Costuma sumir trocando a porta USB ou desligando a suspensão seletiva.`,
-        tweak: "flick", acao: "DESLIGAR SUSPENSÃO DE USB" });
-    }
-
-    if (a.fMedio > 18) {
-      out.push({ nivel: "bad", titulo: `Painel rodando a ${Math.round(1000 / a.fMedio)} fps`,
-        texto: `Frame médio de ${a.fMedio.toFixed(1)} ms. Se está assim aqui, no jogo está pior — vale rodar as otimizações de GPU e energia.`,
-        tweak: "hags", acao: "APLICAR GPU SCHEDULING" });
-    } else if (a.f1 > a.fMedio * 3) {
-      out.push({ nivel: "warn", titulo: "Travadas de frame",
-        texto: `O frame médio é ${a.fMedio.toFixed(1)} ms, mas o 1% pior chegou a ${a.f1.toFixed(1)} ms. Esse tipo de engasgo costuma vir do timer do kernel e da paginação de drivers.`,
-        tweak: "halfms", acao: "APLICAR 0.5MS" });
-    }
-
-    out.push({ nivel: a.latencia <= 10 ? "ok" : a.latencia <= 16 ? "warn" : "bad",
-      titulo: `Latência estimada: ${a.latencia.toFixed(1)} ms`,
-      texto: `Soma do que dá pra medir daqui: metade do intervalo do mouse (${(a.intervalo / 2).toFixed(1)} ms) + o tempo de frame (${a.fMedio.toFixed(1)} ms). <b>Não inclui monitor, GPU nem o jogo</b> — medir o clique-até-o-pixel exige hardware externo, então isso é a parte do caminho que o PC controla.` });
-
-    return out;
+    mostrarOverlay("Treino concluído", "Clique pra treinar de novo.");
   }
 
   // ---------------- entrada ----------------
