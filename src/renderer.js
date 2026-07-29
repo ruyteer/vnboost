@@ -1,15 +1,14 @@
 "use strict";
 const $ = (s) => document.querySelector(s);
-const logEl = $("#log");
 
+// O console visual saiu da interface; o log continua indo pro DevTools,
+// que e o que interessa pra diagnostico.
 function log(text) {
-  const line = document.createElement("div");
-  line.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
-  logEl.appendChild(line); logEl.scrollTop = logEl.scrollHeight;
+  console.log(`[VN Boost] ${text}`);
 }
 window.api.onLog((t) => log(t));
 
-function setBusy(b) { document.querySelectorAll(".btn,.btn3d,.tw-item,.perf-btn,.tw-switch,.game-switch").forEach((x) => (x.disabled = b)); }
+function setBusy(b) { document.querySelectorAll(".btn,.tw-item,.perf-btn,.tw-switch,.game-switch").forEach((x) => (x.disabled = b)); }
 async function withBusy(fn) {
   setBusy(true);
   try { await fn(); } catch (e) { log("Erro: " + (e && e.message ? e.message : e)); }
@@ -45,8 +44,7 @@ function renderNotifs() {
 }
 
 // ---------------- configurações ----------------
-const LS_CONSOLE = "vn_show_console", LS_REBOOT = "vn_reboot_notif";
-function applyConsoleSetting() { const on = localStorage.getItem(LS_CONSOLE) !== "0"; $("#console").hidden = !on; $("#setConsole").checked = on; }
+const LS_REBOOT = "vn_reboot_notif";
 function rebootNotifOn() { return localStorage.getItem(LS_REBOOT) !== "0"; }
 
 // ---------------- navegação ----------------
@@ -74,12 +72,6 @@ function applyPlan(plan) {
   PLAN = plan === "precision" ? "precision" : "full";
   const prec = PLAN === "precision";
   document.body.classList.toggle("plan-precision", prec);
-
-  // badge na titlebar
-  const badge = $("#planBadge");
-  badge.hidden = false;
-  badge.textContent = prec ? "PVP EDITION" : "FULL";
-  badge.classList.toggle("pvp", prec);
 
   // Planos separados, sem sobreposição:
   //  - precision: só Dashboard, PrecisionFix e Config
@@ -203,20 +195,6 @@ function buildPrecision(tweaks) {
   PRECISION_TWEAKS = tweaks;
   fillColumns(tweaks.filter((t) => !isKb(t)), $("#pf-mouse-l"), $("#pf-mouse-r"));
   fillColumns(tweaks.filter(isKb), $("#pf-kb-l"), $("#pf-kb-r"));
-}
-
-// "Aplicar/Reverter tudo" de um grupo (Mouse ou Teclado).
-async function applyGroup(group, on) {
-  const list = PRECISION_TWEAKS.filter((t) =>
-    group === "Teclado" ? isKb(t) : !isKb(t),
-  );
-  for (const t of list) {
-    if (t.action) continue;
-    const res = on ? await window.api.apply(t.id) : await window.api.revert(t.id);
-    if (!handleResult(res)) return;
-  }
-  notify(`${group}: tweaks ${on ? "aplicados" : "revertidos"}.`, "ok");
-  await refreshStatus();
 }
 
 function makeGameCard(g) {
@@ -345,7 +323,6 @@ async function initLicense() {
     await window.api.licenseDeactivate(); $("#lockKey").value = ""; showLock("no_key");
     // volta o visual pro neutro até a próxima ativação dizer o plano
     document.body.classList.remove("plan-precision");
-    $("#planBadge").hidden = true;
     await renderLicCard({ licensed: false }); notify("Licença desativada neste PC.", "info");
   });
 }
@@ -497,12 +474,6 @@ async function init() {
   document.querySelectorAll("[data-revertall]").forEach((b) => b.addEventListener("click", () =>
     withBusy(async () => { if (handleResult(await window.api.revertAll(b.dataset.revertall), `Revertido tudo: ${b.dataset.revertall}`)) await refreshStatus(); })));
 
-  // aplicar/reverter so o grupo da tela (Mouse ou Teclado)
-  document.querySelectorAll("[data-applygroup]").forEach((b) => b.addEventListener("click", () =>
-    withBusy(() => applyGroup(b.dataset.applygroup, true))));
-  document.querySelectorAll("[data-revertgroup]").forEach((b) => b.addEventListener("click", () =>
-    withBusy(() => applyGroup(b.dataset.revertgroup, false))));
-
   $("#gameSearch").addEventListener("input", (e) => {
     const q = e.target.value.trim().toLowerCase(); let shown = 0;
     $("#gamesList").querySelectorAll(".card-game").forEach((c) => { const ok = c.dataset.name.includes(q); c.style.display = ok ? "" : "none"; if (ok) shown++; });
@@ -512,12 +483,14 @@ async function init() {
   renderBadge();
   $("#clearNotifs").addEventListener("click", () => { saveNotifs([]); setUnread(0); renderNotifs(); });
 
-  applyConsoleSetting();
-  $("#setConsole").addEventListener("change", (e) => { localStorage.setItem(LS_CONSOLE, e.target.checked ? "1" : "0"); applyConsoleSetting(); });
   $("#setRebootNotif").checked = rebootNotifOn();
   $("#setRebootNotif").addEventListener("change", (e) => localStorage.setItem(LS_REBOOT, e.target.checked ? "1" : "0"));
 
-  $("#clearLog").addEventListener("click", () => { logEl.innerHTML = ""; });
+  // maximizada, a janela encosta na tela: tira o arredondado
+  if (window.api.onWinState) {
+    window.api.onWinState((max) => document.body.classList.toggle("maximized", !!max));
+  }
+
   $("#tlClose").addEventListener("click", () => window.api.winClose());
   $("#tlMin").addEventListener("click", () => window.api.winMin());
   $("#tlMax").addEventListener("click", () => window.api.winMax());

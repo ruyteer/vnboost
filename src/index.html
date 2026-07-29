@@ -15,7 +15,6 @@
       <button id="tlMax" class="dot dot-max" title="Maximizar"></button>
     </div>
     <div class="titlebar-id">VN BOOST <span id="appVer">v1.1</span></div>
-    <span id="planBadge" class="plan-badge" hidden></span>
     <div class="titlebar-spacer"></div>
   </div>
 
@@ -54,7 +53,6 @@
         <button class="nav-item" data-screen="fivem" data-planonly="full"><i data-lucide="rocket"></i> FiveM</button>
         <button class="nav-item" data-screen="system" data-planonly="full"><i data-lucide="wrench"></i> Sistema</button>
         <button class="nav-item" data-screen="notifs" data-planonly="full"><i data-lucide="bell"></i> Notificações <span id="notifBadge" class="badge" hidden>0</span></button>
-        <div class="nav-sep"></div>
         <button class="nav-item" data-screen="config"><i data-lucide="settings"></i> Configurações</button>
       </nav>
     </aside>
@@ -95,14 +93,6 @@
               </div>
             </div>
 
-            <h3 class="section-h">O que vem no pacote</h3>
-            <div class="pvp-chips">
-              <div class="pvp-chip"><i data-lucide="mouse-pointer-2"></i><div><b>Mouse 1:1</b><span>Curva MarkC crua, zero aceleração</span></div></div>
-              <div class="pvp-chip"><i data-lucide="keyboard"></i><div><b>Teclado instantâneo</b><span>Sem delay de repetição e filtros</span></div></div>
-              <div class="pvp-chip"><i data-lucide="timer"></i><div><b>Timers 0.5ms</b><span>Tick do kernel afinado pra input</span></div></div>
-              <div class="pvp-chip"><i data-lucide="wifi"></i><div><b>Rede PVP</b><span>Nagle OFF — hit reg consistente</span></div></div>
-              <div class="pvp-chip"><i data-lucide="monitor-play"></i><div><b>GPU sem fila</b><span>HAGS, MMCSS e fullscreen otimizado</span></div></div>
-            </div>
           </div>
 
           <!-- DASHBOARD · FULL -->
@@ -193,14 +183,6 @@
               <div class="pf-col right" id="pf-mouse-r"></div>
             </div>
 
-            <div class="pf-bottom">
-              <button class="btn3d btn3d-primary" data-applygroup="Mouse">
-                <i data-lucide="zap"></i> APLICAR TUDO
-              </button>
-              <button class="btn3d" data-revertgroup="Mouse">
-                <i data-lucide="rotate-ccw"></i> REVERTER
-              </button>
-            </div>
           </div>
         </section>
 
@@ -243,14 +225,6 @@
               <div class="pf-col right" id="pf-kb-r"></div>
             </div>
 
-            <div class="pf-bottom">
-              <button class="btn3d btn3d-primary" data-applygroup="Teclado">
-                <i data-lucide="zap"></i> APLICAR TUDO
-              </button>
-              <button class="btn3d" data-revertgroup="Teclado">
-                <i data-lucide="rotate-ccw"></i> REVERTER
-              </button>
-            </div>
           </div>
         </section>
 
@@ -381,13 +355,6 @@
             </div>
             <label class="setting">
               <div>
-                <b>Mostrar console</b>
-                <span>Exibe o log técnico na parte de baixo da janela.</span>
-              </div>
-              <input type="checkbox" id="setConsole" class="switch" />
-            </label>
-            <label class="setting">
-              <div>
                 <b>Notificar quando precisar reiniciar</b>
                 <span>Cria uma notificação quando um tweak exige reboot.</span>
               </div>
@@ -401,14 +368,6 @@
         </section>
       </div>
 
-      <!-- CONSOLE (opcional) -->
-      <section class="console" id="console" hidden>
-        <div class="console-head">
-          <span class="console-title"><i class="pulse"></i> CONSOLE</span>
-          <button id="clearLog" class="btn-mini">limpar</button>
-        </div>
-        <pre id="log"></pre>
-      </section>
     </div>
   </div>
 

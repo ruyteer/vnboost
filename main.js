@@ -47,11 +47,15 @@ function cpuUsage() {
 function createWindow() {
   win = new BrowserWindow({
     width: 1100, height: 800, minWidth: 940, minHeight: 640,
-    frame: false, backgroundColor: "#0a0a0c", show: true,
+    // transparent + frame:false = os cantos arredondados do CSS aparecem de
+    // verdade (sem isso o Windows desenha um retangulo por baixo).
+    frame: false, transparent: true, backgroundColor: "#00000000", show: true,
     icon: path.join(__dirname, "build", "icon.ico"),
     webPreferences: { preload: path.join(__dirname, "preload.js"), contextIsolation: true, nodeIntegration: false },
   });
   win.loadFile(path.join(__dirname, "src", "index.html"));
+  // maximizada a janela encosta na borda da tela: nesse estado o arredondado
+  // some (senao ficam cantos cortados feios).
   win.on("maximize", () => win.webContents.send("win-state", true));
   win.on("unmaximize", () => win.webContents.send("win-state", false));
 }

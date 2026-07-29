@@ -18,6 +18,7 @@ contextBridge.exposeInMainWorld("api", {
   getMetrics: () => ipcRenderer.invoke("get-metrics"),
   createRestorePoint: () => ipcRenderer.invoke("create-restore-point"),
   onLog: (cb) => ipcRenderer.on("log", (_e, text) => cb(text)),
+  onWinState: (cb) => ipcRenderer.on("win-state", (_e, maximized) => cb(maximized)),
   winMin: () => ipcRenderer.send("win-min"),
   winMax: () => ipcRenderer.send("win-max"),
   winClose: () => ipcRenderer.send("win-close"),
