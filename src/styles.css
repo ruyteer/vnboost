@@ -11,7 +11,13 @@
 }
 /* a janela e transparent+frameless: o arredondado do painel vem daqui.
    O clip precisa valer no html E no body, senao filhos com fundo proprio
-   (a arena, por ex.) vazam por cima do canto e ele fica quadrado. */
+   (a arena, por ex.) vazam por cima do canto e ele fica quadrado.
+
+   ATENCAO: overflow:hidden NAO corta filho position:fixed — fixed se ancora
+   na viewport, nao no body, entao ele pinta o retangulo inteiro da janela e
+   reaparece com canto quadrado por cima do arredondado. Por isso o body e
+   `position: relative` e todo painel de janela inteira aqui usa `absolute`
+   (#app-bg, .lock). Se precisar de mais um desses, use absolute tambem. */
 html, body { height: 100%; }
 html {
   background: transparent;
@@ -26,6 +32,7 @@ body {
     var(--bg);
   color: var(--text);
   display: flex; flex-direction: column; height: 100vh; user-select: none;
+  position: relative; /* ancora os paineis de janela inteira (ver nota acima) */
   border-radius: 14px;
   overflow: hidden;
   isolation: isolate; /* garante que o clip do radius pegue os filhos */
@@ -35,8 +42,9 @@ body {
 body.maximized, html:has(body.maximized) { border-radius: 0; }
 body.maximized { border-color: transparent; }
 
-/* fundo animado global: atras de tudo, inclusive da sidebar */
-#app-bg { position: fixed; inset: 0; z-index: 0; opacity: 0; transition: opacity 0.5s ease; }
+/* fundo animado global: atras de tudo, inclusive da sidebar. absolute (e nao
+   fixed) pra ser cortado pelo arredondado do body */
+#app-bg { position: absolute; inset: 0; z-index: 0; opacity: 0; transition: opacity 0.5s ease; }
 body.bg-on #app-bg { opacity: 0.4; }
 
 /* Titlebar */
@@ -194,7 +202,7 @@ body.bg-on #app-bg { opacity: 0.4; }
 
 /* ---------- Tela de bloqueio (licenca) ---------- */
 .titlebar { position: relative; z-index: 100; }
-.lock { position: fixed; left: 0; right: 0; top: 38px; bottom: 0; z-index: 50;
+.lock { position: absolute; left: 0; right: 0; top: 38px; bottom: 0; z-index: 50;
   background: radial-gradient(700px 400px at 50% 0%, rgba(225,6,0,0.14), transparent 60%), var(--bg);
   display: flex; align-items: center; justify-content: center; padding: 30px; }
 .lock-box { width: 100%; max-width: 420px; background: transparent;
