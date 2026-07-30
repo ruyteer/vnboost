@@ -7,6 +7,10 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <!-- Fundo base (cor + brilhos vermelhos). Precisa ser um elemento: fundo no
+       body/html vira "canvas background" e o navegador pinta isso na janela
+       inteira ignorando o border-radius, estourando o canto arredondado. -->
+  <div id="app-base"></div>
   <!-- fundo animado global: fica atras de tudo, inclusive da sidebar -->
   <div id="app-bg"></div>
   <!-- Titlebar -->

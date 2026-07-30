@@ -9,34 +9,47 @@
   --green: #28c840; --yellow: #febc2e;
   --font: 'Poppins', 'Segoe UI', system-ui, sans-serif;
 }
-/* a janela e transparent+frameless: o arredondado do painel vem daqui.
-   O clip precisa valer no html E no body, senao filhos com fundo proprio
-   (a arena, por ex.) vazam por cima do canto e ele fica quadrado.
+/* A janela e transparent+frameless: o arredondado do painel vem daqui.
+   Duas armadilhas mordem esse canto, as duas por motivos diferentes:
 
-   ATENCAO: overflow:hidden NAO corta filho position:fixed — fixed se ancora
-   na viewport, nao no body, entao ele pinta o retangulo inteiro da janela e
-   reaparece com canto quadrado por cima do arredondado. Por isso o body e
-   `position: relative` e todo painel de janela inteira aqui usa `absolute`
-   (#app-bg, .lock). Se precisar de mais um desses, use absolute tambem. */
+   1) FUNDO NAO PODE FICAR NO html NEM NO body. O fundo do elemento raiz (e, se
+      ele nao tiver, o do body por propagacao) vira "canvas background": o
+      navegador pinta na janela inteira e border-radius NAO corta. Era isso que
+      deixava um retangulo escuro sobrando fora do canto. Por isso os dois
+      ficam sem fundo nenhum e a cor mora no #app-base.
+
+   2) overflow:hidden NAO corta filho position:fixed — fixed se ancora na
+      viewport, nao no body. Por isso o body e `position: relative` e todo
+      painel de janela inteira usa `absolute` (#app-base, #app-bg, .lock).
+
+   Ou seja: pra somar ao fundo, mexa no #app-base; pra somar um painel de
+   janela inteira, use absolute. Nunca `background` no body. */
 html, body { height: 100%; }
 html {
-  background: transparent;
+  background: none;
   border-radius: 14px;
   overflow: hidden;
 }
 body {
   font-family: var(--font);
-  background:
-    radial-gradient(1100px 500px at 80% -10%, rgba(225,6,0,0.16), transparent 60%),
-    radial-gradient(800px 400px at -5% 110%, rgba(225,6,0,0.10), transparent 55%),
-    var(--bg);
+  background: none; /* ver armadilha 1 — a cor esta no #app-base */
   color: var(--text);
   display: flex; flex-direction: column; height: 100vh; user-select: none;
-  position: relative; /* ancora os paineis de janela inteira (ver nota acima) */
+  position: relative; /* ancora os paineis de janela inteira (armadilha 2) */
   border-radius: 14px;
   overflow: hidden;
   isolation: isolate; /* garante que o clip do radius pegue os filhos */
   border: 1px solid rgba(255,255,255,0.07);
+}
+
+/* fundo base: o que era o background do body, agora como elemento pra ser
+   cortado pelo arredondado */
+#app-base {
+  position: absolute; inset: 0; z-index: 0;
+  background:
+    radial-gradient(1100px 500px at 80% -10%, rgba(225,6,0,0.16), transparent 60%),
+    radial-gradient(800px 400px at -5% 110%, rgba(225,6,0,0.10), transparent 55%),
+    var(--bg);
 }
 /* maximizada encosta na borda da tela: sem arredondado */
 body.maximized, html:has(body.maximized) { border-radius: 0; }
