@@ -412,6 +412,13 @@ body.bg-on #app-bg { opacity: 0.4; }
 }
 .tw-item.on .tw-check::after { transform: rotate(45deg) scale(1); }
 
+/* Ainda rodando em segundo plano. De proposito bem discreto: a marca ja
+   respondeu, isso aqui so avisa que o Windows ainda esta trabalhando — se
+   fosse forte demais desmontaria a sensacao de instantaneo. */
+@keyframes vn-pendente { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+.tw-item.pendente .tw-check,
+.switch.pendente { animation: vn-pendente 1s ease-in-out infinite; }
+
 @media (max-width: 1180px) {
   .pf-cols { grid-template-columns: 1fr minmax(240px, 380px) 1fr; gap: 20px; }
   .pf-col { gap: 16px; }

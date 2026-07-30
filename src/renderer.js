@@ -11,8 +11,78 @@ window.api.onLog((t) => log(t));
 function setBusy(b) { document.querySelectorAll(".btn,.tw-item,.perf-btn,.tw-switch,.game-switch").forEach((x) => (x.disabled = b)); }
 async function withBusy(fn) {
   setBusy(true);
-  try { await fn(); } catch (e) { log("Erro: " + (e && e.message ? e.message : e)); }
+  // operacao em bloco (aplicar tudo, ponto de restauracao) nao pode disputar
+  // as mesmas chaves com um toggle que ainda esta na fila
+  try { await aguardarFila(); await fn(); } catch (e) { log("Erro: " + (e && e.message ? e.message : e)); }
   finally { setBusy(false); }
+}
+
+// ---------------- fila de aplicação (resposta instantânea) ----------------
+/* O clique no check nao espera o Windows: a marca muda na hora e o trabalho
+   de verdade (reg add, powercfg, bcdedit) sai numa fila em segundo plano.
+
+   A fila e serial de proposito. Varios `reg add`/`powercfg` disparados juntos
+   competem pelas mesmas chaves e pelo esquema de energia ativo; como a UI ja
+   respondeu, serializar nao custa nada e evita estado misturado.
+
+   Por item guardamos o ESTADO DESEJADO, nao cada clique: cinco cliques
+   seguidos no mesmo tweak viram uma operacao, nao cinco. Se o desejado mudar
+   enquanto a operacao roda, ela e refeita no fim com o valor novo. */
+const fila = new Map(); // chave -> { ligar, executar, aoFalhar }
+// o que o Windows realmente tem, vindo do tweakStatus (a checagem de verdade).
+// Serve pra nao reescrever registro a toa: liga/desliga/liga volta pro mesmo
+// estado, e ai a segunda operacao nao precisa nem rodar.
+const estadoReal = new Map();
+let filaRodando = false, filaAtual = null, filaEsperando = [];
+
+function aguardarFila() {
+  return filaRodando ? new Promise((r) => filaEsperando.push(r)) : Promise.resolve();
+}
+function naFila(chave) { return fila.has(chave) || filaAtual === chave; }
+
+function elementosDe(chave) {
+  const corte = chave.indexOf(":");
+  const tipo = chave.slice(0, corte), id = CSS.escape(chave.slice(corte + 1));
+  return document.querySelectorAll(tipo === "game"
+    ? `.game-switch[data-name="${id}"]`
+    : `.tw-item[data-id="${id}"], .tw-switch[data-id="${id}"]`);
+}
+function marcarPendente(chave, sim) {
+  elementosDe(chave).forEach((el) => el.classList.toggle("pendente", sim));
+}
+
+function enfileirar(chave, item) {
+  fila.set(chave, item);
+  marcarPendente(chave, true);
+  if (!filaRodando) processarFila();
+}
+
+async function processarFila() {
+  filaRodando = true;
+  while (fila.size) {
+    const [chave, item] = fila.entries().next().value;
+    fila.delete(chave);
+    filaAtual = chave;
+    let ok = false;
+    if (estadoReal.get(chave) === item.ligar) {
+      ok = true; // ja esta assim: nao ha o que escrever
+    } else {
+      try { ok = await item.executar(item.ligar); }
+      catch (e) { log("Erro: " + (e && e.message ? e.message : e)); }
+      if (ok) estadoReal.set(chave, item.ligar);
+    }
+    filaAtual = null;
+    // se a pessoa clicou de novo nesse item enquanto rodava, a intencao nova
+    // ja esta na fila e manda: nao desfazemos a marca dela nem limpamos o
+    // "pendente", que continua valendo pra proxima volta
+    if (!fila.has(chave)) {
+      if (!ok) item.aoFalhar(item.ligar);
+      marcarPendente(chave, false);
+    }
+  }
+  filaRodando = false;
+  filaEsperando.splice(0).forEach((r) => r());
+  await refreshStatus();
 }
 
 // ---------------- notificações ----------------
@@ -99,9 +169,23 @@ async function refreshStatus() {
   try {
     const st = await window.api.tweakStatus();
     const ts = new Set(st.tweaks || []), gs = new Set(st.games || []);
-    document.querySelectorAll(".tw-switch").forEach((s) => (s.checked = ts.has(s.dataset.id)));
-    document.querySelectorAll(".tw-item").forEach((b) => b.classList.toggle("on", ts.has(b.dataset.id)));
-    document.querySelectorAll(".game-switch").forEach((s) => (s.checked = gs.has(s.dataset.name)));
+    // quem esta na fila fica de fora: o valor do servidor ainda e o antigo e
+    // sobrescrever aqui faria a marca piscar de volta na cara da pessoa
+    // quem esta na fila fica de fora dos dois: a leitura do servidor ainda
+    // reflete o estado antigo. Na marca isso faria piscar de volta; no
+    // estadoReal seria pior — a fila poderia achar que ja esta no valor
+    // desejado e pular uma escrita que precisa acontecer.
+    const sincronizar = (chave, ligado, aplicar) => {
+      if (naFila(chave)) return;
+      estadoReal.set(chave, ligado);
+      aplicar(ligado);
+    };
+    document.querySelectorAll(".tw-switch").forEach((s) =>
+      sincronizar("tweak:" + s.dataset.id, ts.has(s.dataset.id), (v) => (s.checked = v)));
+    document.querySelectorAll(".tw-item").forEach((b) =>
+      sincronizar("tweak:" + b.dataset.id, ts.has(b.dataset.id), (v) => b.classList.toggle("on", v)));
+    document.querySelectorAll(".game-switch").forEach((s) =>
+      sincronizar("game:" + s.dataset.name, gs.has(s.dataset.name), (v) => (s.checked = v)));
     const n = (st.tweaks || []).length;
     const total = st.total || 0;
     const pct = total > 0 ? Math.round((n / total) * 100) : 0;
@@ -127,15 +211,25 @@ function makeCard(t) {
         <input type="checkbox" class="switch tw-switch" data-id="${t.id}"></div>
       <p>${t.desc}</p>${note}`;
     const sw = card.querySelector(".tw-switch");
-    sw.addEventListener("change", () => withBusy(async () => {
-      const on = sw.checked;
-      const res = on ? await window.api.apply(t.id) : await window.api.revert(t.id);
-      const ok = handleResult(res, `${on ? "Aplicado" : "Revertido"}: ${t.name}`);
-      if (!ok) sw.checked = !on;
-      else if (on && t.note && /reinici/i.test(t.note) && rebootNotifOn()) notify(`${t.name} exige reiniciar o PC.`, "warn");
+    // o checkbox ja virou sozinho antes do change: so precisamos nao travar
+    sw.addEventListener("change", () => enfileirar("tweak:" + t.id, {
+      ligar: sw.checked,
+      executar: (ligar) => aplicarTweak(t, ligar),
+      aoFalhar: (ligar) => (sw.checked = !ligar),
     }));
   }
   return card;
+}
+
+// aplica/reverte um tweak e devolve se deu certo (usado pelos dois formatos
+// de check: o do PrecisionFix e o dos cards)
+async function aplicarTweak(t, ligar) {
+  const res = ligar ? await window.api.apply(t.id) : await window.api.revert(t.id);
+  const ok = handleResult(res, `${ligar ? "Aplicado" : "Revertido"}: ${t.name}`);
+  if (ok && ligar && t.note && /reinici/i.test(t.note) && rebootNotifOn()) {
+    notify(`${t.name} exige reiniciar o PC.`, "warn");
+  }
+  return ok;
 }
 // ---------------- PrecisionFix (mouse / teclado) ----------------
 // Os tweaks ficam em duas colunas alinhadas, flanqueando o modelo 3D. A
@@ -154,24 +248,22 @@ function makeTweakItem(t, side) {
   const label = `<span>${t.name}</span>`;
   b.innerHTML = side === "left" ? label + box : box + label;
 
-  b.addEventListener("click", () => withBusy(async () => {
-    // acao pontual (sem reverter) x tweak liga/desliga
+  b.addEventListener("click", () => {
+    // acao pontual (sem reverter): executa uma vez e nao tem estado pra
+    // antecipar, entao continua bloqueando ate terminar
     if (t.action) {
       if (t.confirm && !window.confirm(t.confirm)) return;
-      handleResult(await window.api.apply(t.id), `Ação executada: ${t.name}`);
+      withBusy(async () => handleResult(await window.api.apply(t.id), `Ação executada: ${t.name}`));
       return;
     }
     const on = !b.classList.contains("on");
-    const res = on ? await window.api.apply(t.id) : await window.api.revert(t.id);
-    const ok = handleResult(res, `${on ? "Aplicado" : "Revertido"}: ${t.name}`);
-    if (ok) {
-      b.classList.toggle("on", on);
-      if (on && t.note && /reinici/i.test(t.note) && rebootNotifOn()) {
-        notify(`${t.name} exige reiniciar o PC.`, "warn");
-      }
-    }
-    await refreshStatus();
-  }));
+    b.classList.toggle("on", on); // marca na hora; o Windows corre atras
+    enfileirar("tweak:" + t.id, {
+      ligar: on,
+      executar: (ligar) => aplicarTweak(t, ligar),
+      aoFalhar: (ligar) => b.classList.toggle("on", !ligar),
+    });
+  });
 
   return b;
 }
@@ -201,11 +293,12 @@ function makeGameCard(g) {
     <div class="card-top"><h3>${g.name}</h3>
       <input type="checkbox" class="switch game-switch" data-name="${g.name}"></div>`;
   const sw = card.querySelector(".game-switch");
-  sw.addEventListener("change", () => withBusy(async () => {
-    const on = sw.checked;
-    const res = on ? await window.api.applyGame(g.name) : await window.api.revertGame(g.name);
-    const ok = handleResult(res, `${on ? "Prioridade Alta" : "Prioridade revertida"}: ${g.name}`);
-    if (!ok) sw.checked = !on;
+  sw.addEventListener("change", () => enfileirar("game:" + g.name, {
+    ligar: sw.checked,
+    executar: async (ligar) => handleResult(
+      ligar ? await window.api.applyGame(g.name) : await window.api.revertGame(g.name),
+      `${ligar ? "Prioridade Alta" : "Prioridade revertida"}: ${g.name}`),
+    aoFalhar: (ligar) => (sw.checked = !ligar),
   }));
   return card;
 }
